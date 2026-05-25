@@ -1,0 +1,117 @@
+## AZ-700 Lab 1 - Recursos ##
+ 
+# Resource Group
+az group create \
+  --name $RG \
+  --location $LOCATION_EASTUS
+ 
+az group show --name $RG
+ 
+ 
+# CoreServicesVnet - East US
+az network vnet create \
+  --resource-group $RG \
+  --location $LOCATION_EASTUS \
+  --name $VNET1_NAME \
+  --address-prefix $VNET1_PREFIX \
+  --subnet-name $VNET1_SUB1_NAME \
+  --subnet-prefix $VNET1_SUB1
+ 
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET1_NAME \
+  --name $VNET1_SUB2_NAME \
+  --address-prefix $VNET1_SUB2
+ 
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET1_NAME \
+  --name $VNET1_SUB3_NAME \
+  --address-prefix $VNET1_SUB3
+ 
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET1_NAME \
+  --name $VNET1_SUB4_NAME \
+  --address-prefix $VNET1_SUB4
+ 
+az network vnet show \
+  --resource-group $RG \
+  --name $VNET1_NAME \
+  --query "{Nome:name, Regiao:location, Prefixo:addressSpace.addressPrefixes}" \
+  -o table
+ 
+az network vnet subnet list \
+  --resource-group $RG \
+  --vnet-name $VNET1_NAME \
+  --query "[].{Nome:name, Prefixo:addressPrefix}" \
+  -o table
+ 
+ 
+# ManufacturingVnet - West Europe
+az network vnet create \
+  --resource-group $RG \
+  --location $LOCATION_WESTEU \
+  --name $VNET2_NAME \
+  --address-prefix $VNET2_PREFIX \
+  --subnet-name $VNET2_SUB1_NAME \
+  --subnet-prefix $VNET2_SUB1
+ 
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET2_NAME \
+  --name $VNET2_SUB2_NAME \
+  --address-prefix $VNET2_SUB2
+ 
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET2_NAME \
+  --name $VNET2_SUB3_NAME \
+  --address-prefix $VNET2_SUB3
+ 
+az network vnet subnet create \
+  --resource-group $RG \
+  --vnet-name $VNET2_NAME \
+  --name $VNET2_SUB4_NAME \
+  --address-prefix $VNET2_SUB4
+ 
+az network vnet show \
+  --resource-group $RG \
+  --name $VNET2_NAME \
+  --query "{Nome:name, Regiao:location, Prefixo:addressSpace.addressPrefixes}" \
+  -o table
+ 
+az network vnet subnet list \
+  --resource-group $RG \
+  --vnet-name $VNET2_NAME \
+  --query "[].{Nome:name, Prefixo:addressPrefix}" \
+  -o table
+ 
+ 
+# ResearchVnet - Southeast Asia
+az network vnet create \
+  --resource-group $RG \
+  --location $LOCATION_SOUTHASIA \
+  --name $VNET3_NAME \
+  --address-prefix $VNET3_PREFIX \
+  --subnet-name $VNET3_SUB1_NAME \
+  --subnet-prefix $VNET3_SUB1
+ 
+az network vnet show \
+  --resource-group $RG \
+  --name $VNET3_NAME \
+  --query "{Nome:name, Regiao:location, Prefixo:addressSpace.addressPrefixes}" \
+  -o table
+ 
+az network vnet subnet list \
+  --resource-group $RG \
+  --vnet-name $VNET3_NAME \
+  --query "[].{Nome:name, Prefixo:addressPrefix}" \
+  -o table
+ 
+ 
+# Validação final - todas as VNets do RG
+az network vnet list \
+  --resource-group $RG \
+  --query "[].{Nome:name, Regiao:location, Prefixo:addressSpace.addressPrefixes}" \
+  -o table
