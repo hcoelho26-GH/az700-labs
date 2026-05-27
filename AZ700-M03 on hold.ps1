@@ -1,6 +1,6 @@
-## AZ-700 M03 - Variáveis ##
+## AZ-700 M03 - Variables ##
  
-# Geral
+# General
 $RG_CORE   = "ContosoResourceGroup"
 $RG_ER     = "ExpressRouteResourceGroup"
 $LOCATION  = "eastus"

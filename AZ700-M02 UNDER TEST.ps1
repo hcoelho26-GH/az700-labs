@@ -1,6 +1,6 @@
-## AZ-700 M02 - Variáveis ##
+## AZ-700 M02 - Variables ##
  
-# Geral
+# General
 $RG              = "ContosoResourceGroup"
 $LOCATION_EASTUS = "eastus"
 $LOCATION_WESTEU = "westeurope"

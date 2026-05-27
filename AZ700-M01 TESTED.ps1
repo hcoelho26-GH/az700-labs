@@ -1,6 +1,6 @@
-## AZ-700 M01 - Variáveis ##
+## AZ-700 M01 - Variables ##
 
-# Geral
+# General
 $RG              = "ContosoResourceGrouplod61979644"
 $LOCATION_EASTUS    = "eastus"
 $LOCATION_WESTEU    = "westeurope"
@@ -66,7 +66,7 @@ $VM_SIZE    = "Standard_D2s_v3"
 $ADMIN_USER = "TestUser"
 
 
-## AZ-700 M01 - Recursos ##
+## AZ-700 M01 - Resources ##
  
  
 # Unit 4 - Task 1 - Resource Group
@@ -112,7 +112,7 @@ New-AzVirtualNetwork `
   -Subnet $res
  
  
-# Unit 4 - Task 5 - Verificar VNets e Subnets
+# Unit 4 - Task 5 - Check VNets e Subnets
  
 Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME | Select-Object Name, Location, AddressSpace
 Get-AzVirtualNetworkSubnetConfig -VirtualNetwork (Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME) | Select-Object Name, AddressPrefix
@@ -126,14 +126,14 @@ Get-AzVirtualNetworkSubnetConfig -VirtualNetwork (Get-AzVirtualNetwork -Resource
 Get-AzVirtualNetwork -ResourceGroupName $RG | Select-Object Name, Location, AddressSpace
  
  
-# Unit 6 - Task 1 - Criar Private DNS Zone
+# Unit 6 - Task 1 - Create Private DNS Zone
  
 New-AzPrivateDnsZone -ResourceGroupName $RG -Name $DNS_ZONE
  
 Get-AzPrivateDnsZone -ResourceGroupName $RG -Name $DNS_ZONE
  
  
-# Unit 6 - Task 2 - Link VNet para auto registration
+# Unit 6 - Task 2 - Link VNet to auto registration
  
 $vnet = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME
  
@@ -145,9 +145,9 @@ New-AzPrivateDnsVirtualNetworkLink `
 Get-AzPrivateDnsVirtualNetworkLink -ResourceGroupName $RG -ZoneName $DNS_ZONE -Name $DNS_LINK_NAME
  
  
-# Unit 6 - Task 3 - Criar testvm1 e testvm2
+# Unit 6 - Task 3 - Create testvm1 and testvm2
  
-$adminPassword = Read-Host "Password para as VMs" -AsSecureString
+$adminPassword = Read-Host "Password for the VMs" -AsSecureString
 $credential    = New-Object System.Management.Automation.PSCredential($ADMIN_USER, $adminPassword)
 $subnetId      = (Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $VNET1_SUB2_NAME).Id
  
@@ -180,12 +180,12 @@ New-AzVM -ResourceGroupName $RG -Location $LOCATION_EASTUS -VM $vm2Config
 Get-AzVM -ResourceGroupName $RG | Select-Object Name, Location
  
  
-# Unit 6 - Task 4 - Verificar registos DNS
+# Unit 6 - Task 4 - Check DNS records
  
 Get-AzPrivateDnsRecordSet -ResourceGroupName $RG -ZoneName $DNS_ZONE -RecordType A
  
  
-# Unit 8 - Task 1 - Criar ManufacturingVM
+# Unit 8 - Task 1 - Create ManufacturingVM
  
 $vnet2    = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET2_NAME
 $subnetId2 = (Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet2 -Name $MFG_SUBNET_NAME).Id
@@ -205,13 +205,13 @@ New-AzVM -ResourceGroupName $RG -Location $LOCATION_WESTEU -VM $vmConfig
 Get-AzVM -ResourceGroupName $RG -Name $MFG_VM_NAME | Select-Object Name, Location
  
  
-# Unit 8 - Tasks 2 e 3 - Manuais (RDP)
-# Ligar via RDP ao ManufacturingVM e ao testvm1
-# Correr no ManufacturingVM: Test-NetConnection 10.20.20.4 -port 3389
-# Esperado: falhar (ainda sem peering)
+# Unit 8 - Tasks 2 and 3 - Manual (RDP)
+# Enable RDP on ManufacturingVM and testvm1
+# Run on ManufacturingVM: Test-NetConnection 10.20.20.4 -port 3389
+# Expected result: fail (no peering configured yet)
  
  
-# Unit 8 - Task 4 - Criar VNet Peerings
+# Unit 8 - Task 4 - Create VNet Peerings
  
 $vnet1 = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME
 $vnet2 = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET2_NAME
@@ -229,6 +229,6 @@ Get-AzVirtualNetworkPeering -ResourceGroupName $RG -VirtualNetworkName $VNET2_NA
  
  
 # Unit 8 - Task 5 - Manual (RDP)
-# Correr no ManufacturingVM: Test-NetConnection 10.20.20.4 -port 3389
-# Esperado: TcpTestSucceeded: True
+# Run on ManufacturingVM: Test-NetConnection 10.20.20.4 -port 3389
+# Expected result: TcpTestSucceeded: True
  

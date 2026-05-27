@@ -55,6 +55,7 @@
 > Run this block first. Variables do not persist when you close the terminal.
 
 ```powershell
+# General
 $RG                 = "ContosoResourceGrouplod61979644"
 $LOCATION_EASTUS    = "eastus"
 $LOCATION_WESTEU    = "westeurope"
@@ -107,6 +108,7 @@ $ADMIN_USER = "TestUser"
 > Run this block first in any M02 session.
 
 ```powershell
+# General
 $RG              = "ContosoResourceGroup"
 $LOCATION_EASTUS = "eastus"
 $LOCATION_WESTEU = "westeurope"
@@ -157,6 +159,7 @@ $HUB_PREFIX = "10.60.0.0/24"      ; $VWAN_CONN = "ContosoVirtualWAN-to-ResearchV
 > Run this block first in any M03 session.
 
 ```powershell
+# General
 $RG_CORE  = "ContosoResourceGroup"
 $RG_ER    = "ExpressRouteResourceGroup"
 $LOCATION = "eastus"
