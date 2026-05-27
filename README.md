@@ -1,58 +1,58 @@
 # AZ-700 Lab Reference
 
-> Referência rápida de comandos PowerShell para os labs do AZ-700.  
-> **Corre sempre as Variáveis primeiro em cada sessão.**
+> Quick reference for PowerShell commands used in AZ-700 labs.  
+> **Always run the Variables block first in each session.**
 
 ---
 
-## Índice
+## Table of Contents
 
-### Variáveis Globais
-| Módulo | Conteúdo |
+### Global Variables
+| Module | Contents |
 |--------|----------|
-| [Variáveis M01](#variáveis-m01) | RG · VNets · DNS · VMs · Peerings |
-| [Variáveis M02](#variáveis-m02) | VNets · Gateways · Conexões · VWAN |
-| [Variáveis M03](#variáveis-m03) | VNet · ER Gateway · ER Circuit |
+| [Variables M01](#variables-m01) | RG · VNets · DNS · VMs · Peerings |
+| [Variables M02](#variables-m02) | VNets · Gateways · Connections · VWAN |
+| [Variables M03](#variables-m03) | VNet · ER Gateway · ER Circuit |
 
 ### M01 — Virtual Networks, DNS & Peering
-| Part | Task | Descrição |
-|------|------|-----------|
-| Part 4 | Tasks 1-4 | [Criar VNets & Subnets](#m01--part-4--criar-vnets--subnets) |
-| Part 4 | Task 5 | [Verificar VNets](#m01--part-4--verificar-vnets) |
+| Part | Task | Description |
+|------|------|-------------|
+| Part 4 | Tasks 1-4 | [Create VNets & Subnets](#m01--part-4--create-vnets--subnets) |
+| Part 4 | Task 5 | [Verify VNets](#m01--part-4--verify-vnets) |
 | Part 6 | Task 1 | [Private DNS Zone](#m01--part-6--private-dns-zone) |
 | Part 6 | Task 2 | [VNet Link](#m01--part-6--vnet-link) |
 | Part 6 | Tasks 3-4 | [testvm1 + testvm2](#m01--part-6--testvm1--testvm2) |
-| Part 6 | Task 5 | [Verificar DNS](#m01--part-6--verificar-dns) |
+| Part 6 | Task 5 | [Verify DNS](#m01--part-6--verify-dns) |
 | Part 8 | Task 1 | [ManufacturingVM](#m01--part-8--manufacturingvm) |
-| Part 8 | Task 2 | [RDP + Testes](#m01--part-8--rdp--testes) ⚠️ manual |
+| Part 8 | Task 2 | [RDP + Tests](#m01--part-8--rdp--tests) ⚠️ manual |
 | Part 8 | Tasks 3-4 | [VNet Peering](#m01--part-8--vnet-peering) |
 
 ### M02 — VPN Gateway & Virtual WAN
-| Part | Task | Descrição |
-|------|------|-----------|
-| Part 3 | Tasks 1-3 | [Criar VNets](#m02--part-3--criar-vnets) |
+| Part | Task | Description |
+|------|------|-------------|
+| Part 3 | Tasks 1-3 | [Create VNets](#m02--part-3--create-vnets) |
 | Part 3 | Tasks 4-5 | [CoreServicesVM + MfgVM](#m02--part-3--coreservicesvm--mfgvm) |
-| Part 3 | Tasks 6-7 | [RDP + Testes](#m02--part-3--rdp--testes) ⚠️ manual |
+| Part 3 | Tasks 6-7 | [RDP + Tests](#m02--part-3--rdp--tests) ⚠️ manual |
 | Part 3 | Tasks 6-7 | [VPN Gateways](#m02--part-3--vpn-gateways) ⏱️ 45 min |
-| Part 3 | Tasks 8-9 | [Conexões VPN](#m02--part-3--conexões-vpn) |
+| Part 3 | Tasks 8-9 | [VPN Connections](#m02--part-3--vpn-connections) |
 | Part 7 | Task 1 | [Virtual WAN](#m02--part-7--virtual-wan) |
 | Part 7 | Task 2 | [Virtual Hub](#m02--part-7--virtual-hub) ⏱️ 30 min |
-| Part 7 | Task 3 | [Ligar ResearchVnet](#m02--part-7--ligar-researchvnet-ao-hub) |
+| Part 7 | Task 3 | [Connect ResearchVnet](#m02--part-7--connect-researchvnet-to-hub) |
 
 ### M03 — ExpressRoute
-| Part | Task | Descrição |
-|------|------|-----------|
+| Part | Task | Description |
+|------|------|-------------|
 | Part 4 | Task 1 | [VNet + GatewaySubnet](#m03--part-4--vnet--gatewaysubnet) |
 | Part 4 | Task 2 | [ExpressRoute Gateway](#m03--part-4--expressroute-gateway) ⏱️ 45 min |
-| Part 5 | Task 1 | [ExpressRoute Circuit](#m03--part-5--expressroute-circuit) ⚠️ faturação |
+| Part 5 | Task 1 | [ExpressRoute Circuit](#m03--part-5--expressroute-circuit) ⚠️ billing starts |
 | Part 5 | Task 2 | [Service Key](#m03--part-5--service-key) |
-| Part 5 | Task 3 | [Deprovision + Cleanup](#m03--part-5--deprovision--cleanup) ⛔ cuidado |
+| Part 5 | Task 3 | [Deprovision + Cleanup](#m03--part-5--deprovision--cleanup) ⛔ caution |
 
 ---
 
-## Variáveis M01
+## Variables M01
 
-> Corre este bloco primeiro. As variáveis não persistem quando fechas o terminal.
+> Run this block first. Variables do not persist when you close the terminal.
 
 ```powershell
 $RG                 = "ContosoResourceGrouplod61979644"
@@ -102,9 +102,9 @@ $ADMIN_USER = "TestUser"
 
 ---
 
-## Variáveis M02
+## Variables M02
 
-> Corre este bloco primeiro em qualquer sessão do M02.
+> Run this block first in any M02 session.
 
 ```powershell
 $RG              = "ContosoResourceGroup"
@@ -135,7 +135,7 @@ $GW1_NAME   = "CoreServicesVnetGateway"  ; $GW1_PIP = "CoreServicesVnetGateway-i
 $GW2_NAME   = "ManufacturingVnetGateway" ; $GW2_PIP = "ManufacturingVnetGateway-ip"
 $GW_SKU     = "VpnGw1AZ"                 ; $GW_GEN  = "Generation1"
 
-# Conexões VPN
+# VPN Connections
 $CONN1_NAME = "CoreServicesGW-to-ManufacturingGW"
 $CONN2_NAME = "ManufacturingGW-to-CoreServicesGW"
 $SHARED_KEY = "abc123"
@@ -152,9 +152,9 @@ $HUB_PREFIX = "10.60.0.0/24"      ; $VWAN_CONN = "ContosoVirtualWAN-to-ResearchV
 
 ---
 
-## Variáveis M03
+## Variables M03
 
-> Corre este bloco primeiro em qualquer sessão do M03.
+> Run this block first in any M03 session.
 
 ```powershell
 $RG_CORE  = "ContosoResourceGroup"
@@ -181,9 +181,9 @@ $ER_BILLING  = "MeteredData"
 
 ---
 
-## M01 · Part 4 · Criar VNets & Subnets
+## M01 · Part 4 · Create VNets & Subnets
 
-> Resource Group + 3 VNets em regiões diferentes.
+> Resource Group + 3 VNets in different regions.
 
 ```powershell
 # Resource Group
@@ -202,7 +202,7 @@ New-AzVirtualNetwork -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $VN
 
 ---
 
-## M01 · Part 4 · Verificar VNets
+## M01 · Part 4 · Verify VNets
 
 ```powershell
 Get-AzVirtualNetwork -ResourceGroupName $RG | Select-Object Name, Location, AddressSpace
@@ -235,21 +235,21 @@ Get-AzPrivateDnsVirtualNetworkLink -ResourceGroupName $RG -ZoneName $DNS_ZONE -N
 $cred = Get-Credential -UserName $ADMIN_USER
 
 # testvm1 — SharedServicesSubnet
-$vnet1  = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME
+$vnet1   = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME
 $subnet1 = Get-AzVirtualNetworkSubnetConfig -Name $VNET1_SUB3_NAME -VirtualNetwork $vnet1
-$nsg1   = New-AzNetworkSecurityGroup -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $NSG1_NAME
-$pip1   = New-AzPublicIpAddress -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $PIP1_NAME -AllocationMethod Dynamic
-$nic1   = New-AzNetworkInterface -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $NIC1_NAME -SubnetId $subnet1.Id -PublicIpAddressId $pip1.Id -NetworkSecurityGroupId $nsg1.Id
-$vmCfg1 = New-AzVMConfig -VMName $VM1_NAME -VMSize $VM_SIZE |
-          Set-AzVMOperatingSystem -Windows -ComputerName $VM1_NAME -Credential $cred |
-          Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2019-Datacenter -Version latest |
-          Add-AzVMNetworkInterface -Id $nic1.Id
+$nsg1    = New-AzNetworkSecurityGroup -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $NSG1_NAME
+$pip1    = New-AzPublicIpAddress -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $PIP1_NAME -AllocationMethod Dynamic
+$nic1    = New-AzNetworkInterface -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $NIC1_NAME -SubnetId $subnet1.Id -PublicIpAddressId $pip1.Id -NetworkSecurityGroupId $nsg1.Id
+$vmCfg1  = New-AzVMConfig -VMName $VM1_NAME -VMSize $VM_SIZE |
+           Set-AzVMOperatingSystem -Windows -ComputerName $VM1_NAME -Credential $cred |
+           Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2019-Datacenter -Version latest |
+           Add-AzVMNetworkInterface -Id $nic1.Id
 New-AzVM -ResourceGroupName $RG -Location $LOCATION_EASTUS -VM $vmCfg1
 ```
 
 ---
 
-## M01 · Part 6 · Verificar DNS
+## M01 · Part 6 · Verify DNS
 
 ```powershell
 Get-AzPrivateDnsRecordSet -ResourceGroupName $RG -ZoneName $DNS_ZONE -RecordType A
@@ -266,20 +266,18 @@ $subnet  = Get-AzVirtualNetworkSubnetConfig -Name $MFG_SUBNET_NAME -VirtualNetwo
 $nsg     = New-AzNetworkSecurityGroup -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $MFG_NSG_NAME
 $pip     = New-AzPublicIpAddress -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $MFG_PIP_NAME -AllocationMethod Dynamic
 $nic     = New-AzNetworkInterface -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $MFG_NIC_NAME -SubnetId $subnet.Id -PublicIpAddressId $pip.Id -NetworkSecurityGroupId $nsg.Id
-$vmCfg  = New-AzVMConfig -VMName $MFG_VM_NAME -VMSize $VM_SIZE |
-          Set-AzVMOperatingSystem -Windows -ComputerName $MFG_VM_NAME -Credential $cred |
-          Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2019-Datacenter -Version latest |
-          Add-AzVMNetworkInterface -Id $nic.Id
+$vmCfg   = New-AzVMConfig -VMName $MFG_VM_NAME -VMSize $VM_SIZE |
+           Set-AzVMOperatingSystem -Windows -ComputerName $MFG_VM_NAME -Credential $cred |
+           Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2019-Datacenter -Version latest |
+           Add-AzVMNetworkInterface -Id $nic.Id
 New-AzVM -ResourceGroupName $RG -Location $LOCATION_WESTEU -VM $vmCfg
 ```
 
 ---
 
-## M01 · Part 8 · RDP + Testes
+## M01 · Part 8 · RDP + Tests
 
-> ⚠️ **Passo manual** — requer RDP para a VM.
-
-Conecta via RDP e testa conectividade entre VMs antes de criar o peering.
+> ⚠️ **Manual step** — requires RDP into the VM to test connectivity before creating the peering.
 
 ---
 
@@ -298,7 +296,7 @@ Get-AzVirtualNetworkPeering -ResourceGroupName $RG -VirtualNetworkName $VNET2_NA
 
 ---
 
-## M02 · Part 3 · Criar VNets
+## M02 · Part 3 · Create VNets
 
 ```powershell
 # CoreServicesVnet
@@ -339,15 +337,15 @@ New-AzVM -ResourceGroupName $RG -Location $LOCATION_EASTUS -VM $vmCfg1
 
 ---
 
-## M02 · Part 3 · RDP + Testes
+## M02 · Part 3 · RDP + Tests
 
-> ⚠️ **Passo manual** — requer RDP para as VMs para testar conectividade antes dos gateways.
+> ⚠️ **Manual step** — requires RDP into the VMs to test connectivity before creating the gateways.
 
 ---
 
 ## M02 · Part 3 · VPN Gateways
 
-> ⏱️ Demora até 45 minutos. Corre os dois em paralelo.
+> ⏱️ Takes up to 45 minutes. Run both in parallel.
 
 ```powershell
 # CoreServicesVnetGateway — East US
@@ -364,16 +362,16 @@ $gwSubnet2 = Get-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetw
 $gwIp2     = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig2" -SubnetId $gwSubnet2.Id -PublicIpAddressId $pipGw2.Id
 New-AzVirtualNetworkGateway -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $GW2_NAME -IpConfigurations $gwIp2 -GatewayType VPN -VpnType RouteBased -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN
 
-# Verificar estado
+# Check status
 Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW1_NAME | Select-Object Name, ProvisioningState
 Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW2_NAME | Select-Object Name, ProvisioningState
 ```
 
 ---
 
-## M02 · Part 3 · Conexões VPN
+## M02 · Part 3 · VPN Connections
 
-> ⛔ **Só correr depois de ambos os gateways estarem `Succeeded`!**
+> ⛔ **Only run after both gateways show `Succeeded`!**
 
 ```powershell
 $gw1Obj = Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW1_NAME
@@ -399,7 +397,7 @@ Get-AzVirtualWan -ResourceGroupName $RG -Name $VWAN_NAME | Select-Object Name, L
 
 ## M02 · Part 7 · Virtual Hub
 
-> ⏱️ Demora até 30 minutos. Só avança para ligar a VNet quando o Hub estiver `Succeeded`.
+> ⏱️ Takes up to 30 minutes. Do not connect the VNet until the Hub shows `Succeeded`.
 
 ```powershell
 New-AzVirtualHub `
@@ -414,9 +412,9 @@ Get-AzVirtualHub -ResourceGroupName $RG -Name $HUB_NAME | Select-Object Name, Pr
 
 ---
 
-## M02 · Part 7 · Ligar ResearchVnet ao Hub
+## M02 · Part 7 · Connect ResearchVnet to Hub
 
-> ⛔ **Só correr depois do Hub estar `Succeeded`!**
+> ⛔ **Only run after the Hub shows `Succeeded`!**
 
 ```powershell
 $res   = New-AzVirtualNetworkSubnetConfig -Name $VNET3_SUB1_NAME -AddressPrefix $VNET3_SUB1
@@ -430,7 +428,7 @@ Get-AzVirtualHubVnetConnection -ResourceGroupName $RG -VirtualHubName $HUB_NAME 
 
 ## M03 · Part 4 · VNet + GatewaySubnet
 
-> Cria a CoreServicesVNet com GatewaySubnet para o ExpressRoute Gateway.
+> Creates the CoreServicesVNet with GatewaySubnet for the ExpressRoute Gateway.
 
 ```powershell
 New-AzResourceGroup -Name $RG_CORE -Location $LOCATION
@@ -444,7 +442,7 @@ Get-AzVirtualNetworkSubnetConfig -VirtualNetwork (Get-AzVirtualNetwork -Resource
 
 ## M03 · Part 4 · ExpressRoute Gateway
 
-> ⏱️ Demora até 45 minutos. GatewayType `ExpressRoute` — diferente do VPN Gateway do M02. SKU Standard.
+> ⏱️ Takes up to 45 minutes. GatewayType `ExpressRoute` — different from the VPN Gateway in M02. SKU Standard.
 
 ```powershell
 $pipGw = New-AzPublicIpAddress -ResourceGroupName $RG_CORE -Location $LOCATION -Name $GW_PIP -Sku Standard -AllocationMethod Static
@@ -467,7 +465,7 @@ Get-AzVirtualNetworkGateway -ResourceGroupName $RG_CORE -Name $GW_NAME | Select-
 
 ## M03 · Part 5 · ExpressRoute Circuit
 
-> ⚠️ **O circuit começa a ser faturado assim que o Service Key é emitido!**
+> ⚠️ **Billing starts as soon as the Service Key is issued!**
 
 ```powershell
 New-AzResourceGroup -Name $RG_ER -Location $LOCATION2
@@ -487,7 +485,7 @@ New-AzExpressRouteCircuit `
 
 ## M03 · Part 5 · Service Key
 
-> O Service Key é o que envias ao connectivity provider para provisionar o circuit.
+> The Service Key is what you send to the connectivity provider to provision the circuit.
 
 ```powershell
 $circuit = Get-AzExpressRouteCircuit -ResourceGroupName $RG_ER -Name $ER_NAME
@@ -500,13 +498,13 @@ Write-Host "Circuit Status: $($circuit.CircuitProvisioningState)"
 
 ## M03 · Part 5 · Deprovision + Cleanup
 
-> ⛔ **Só eliminar depois do provider ter `ProviderStatus = NotProvisioned`. Antes disso continuas a ser faturado!**
+> ⛔ **Only delete after the provider shows `ProviderStatus = NotProvisioned`. You will keep being billed until then!**
 
 ```powershell
-# Eliminar o circuit
+# Delete the circuit
 Remove-AzExpressRouteCircuit -ResourceGroupName $RG_ER -Name $ER_NAME -Force
 
-# Cleanup — eliminar Resource Groups
+# Cleanup — delete Resource Groups
 Remove-AzResourceGroup -Name $RG_CORE -Force -AsJob
 Remove-AzResourceGroup -Name $RG_ER   -Force -AsJob
 ```
