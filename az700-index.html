@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-700 Lab Reference</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap');
+  :root {
+    --bg:#0d0f14;--surface:#13161d;--surface2:#1a1e28;--border:#252a38;
+    --accent:#4f9eff;--accent2:#7c5cfc;--green:#3dd68c;--yellow:#f0c060;--red:#ff6b6b;
+    --text:#e2e8f0;--muted:#64748b;
+    --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;}
+
+  .sidebar{width:260px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;}
+  .sidebar-header{padding:24px 20px 16px;border-bottom:1px solid var(--border);}
+  .sidebar-header .logo{font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;margin-bottom:4px;}
+  .sidebar-header h1{font-size:20px;font-weight:800;line-height:1.2;}
+  .nav-section{padding:12px 12px 4px;}
+  .nav-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 8px;margin-bottom:4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--muted);transition:all .15s;border:none;background:none;width:100%;text-align:left;}
+  .nav-item:hover{background:var(--surface2);color:var(--text);}
+  .nav-item.active{background:rgba(79,158,255,.1);color:var(--accent);}
+  .nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+  .main{margin-left:260px;flex:1;padding:40px;max-width:920px;}
+  .section{display:none;}.section.active{display:block;}
+  .section-header{margin-bottom:28px;}
+  .section-tag{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+  .section-title{font-size:26px;font-weight:800;margin-bottom:6px;}
+  .section-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+
+  .block{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+  .block-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface2);}
+  .block-title{font-size:12px;font-weight:600;color:var(--text);font-family:var(--mono);}
+  .copy-btn{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;}
+  .copy-btn:hover{color:var(--text);border-color:var(--accent);}
+  .copy-btn.ok{color:var(--green);border-color:var(--green);}
+  pre{padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.7;overflow-x:auto;color:var(--text);}
+  .c{color:var(--muted);}.k{color:var(--accent2);}.s{color:var(--green);}.v{color:var(--accent);}.p{color:var(--yellow);}
+
+  .badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;font-family:var(--mono);margin-left:6px;}
+  .badge-auto{background:rgba(61,214,140,.1);color:var(--green);border:1px solid rgba(61,214,140,.2);}
+  .badge-manual{background:rgba(255,107,107,.1);color:var(--red);border:1px solid rgba(255,107,107,.2);}
+  .badge-wait{background:rgba(240,192,96,.1);color:var(--yellow);border:1px solid rgba(240,192,96,.2);}
+
+  .note{background:rgba(240,192,96,.07);border:1px solid rgba(240,192,96,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--yellow);margin-bottom:14px;font-family:var(--mono);}
+  .note-red{background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px;font-family:var(--mono);}
+
+  .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px;}
+  .home-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;transition:all .2s;}
+  .home-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .home-card-num{font-size:10px;font-family:var(--mono);color:var(--accent);font-weight:600;margin-bottom:6px;}
+  .home-card-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .home-card-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+
+  .manual-block{background:rgba(255,107,107,.05);border:1px solid rgba(255,107,107,.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--muted);line-height:1.7;}
+  .manual-block strong{color:var(--red);font-family:var(--mono);font-size:12px;}
+
+  .index-group{margin-bottom:28px;}
+  .index-group-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-left:2px;}
+  .index-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+  .index-card{display:flex;flex-direction:column;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .15s;min-width:160px;flex:1;}
+  .index-card:hover{border-color:var(--accent);background:var(--surface2);transform:translateY(-1px);}
+  .index-card.vars{border-color:rgba(124,92,252,.3);}.index-card.vars:hover{border-color:var(--accent2);}
+  .index-card.wait{border-color:rgba(240,192,96,.2);}.index-card.wait:hover{border-color:var(--yellow);}
+  .index-card.manual{border-color:rgba(255,107,107,.2);}.index-card.manual:hover{border-color:var(--red);}
+  .index-card.danger{border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.04);}.index-card.danger:hover{border-color:var(--red);}
+  .index-mod{font-size:10px;font-family:var(--mono);font-weight:600;color:var(--accent);letter-spacing:.05em;}
+  .index-card.vars .index-mod{color:var(--accent2);}
+  .index-card.wait .index-mod{color:var(--yellow);}
+  .index-card.manual .index-mod,.index-card.danger .index-mod{color:var(--red);}
+  .index-name{font-size:13px;font-weight:700;color:var(--text);}
+  .index-hint{font-size:11px;color:var(--muted);line-height:1.4;}
+</style>
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Microsoft Learn</div>
+    <h1>AZ-700<br>Labs</h1>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Início</div>
+    <button class="nav-item active" onclick="show('home',this)"><span class="nav-dot" style="background:var(--accent)"></span>Índice</button>
+    <button class="nav-item" onclick="show('vars-m01',this)"><span class="nav-dot" style="background:var(--accent2)"></span>Variáveis M01</button>
+    <button class="nav-item" onclick="show('vars-m02',this)"><span class="nav-dot" style="background:var(--accent2)"></span>Variáveis M02</button>
+    <button class="nav-item" onclick="show('vars-m03',this)"><span class="nav-dot" style="background:var(--accent2)"></span>Variáveis M03</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">M01 · Part 4</div>
+    <button class="nav-item" onclick="show('m01p4-vnets',this)"><span class="nav-dot" style="background:var(--green)"></span>Criar VNets</button>
+    <button class="nav-item" onclick="show('m01p4-verify',this)"><span class="nav-dot" style="background:var(--green)"></span>Verificar VNets</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">M01 · Part 6</div>
+    <button class="nav-item" onclick="show('m01p6-dns',this)"><span class="nav-dot" style="background:var(--green)"></span>Private DNS Zone</button>
+    <button class="nav-item" onclick="show('m01p6-link',this)"><span class="nav-dot" style="background:var(--green)"></span>VNet Link</button>
+    <button class="nav-item" onclick="show('m01p6-vms',this)"><span class="nav-dot" style="background:var(--green)"></span>testvm1 + testvm2</button>
+    <button class="nav-item" onclick="show('m01p6-dnscheck',this)"><span class="nav-dot" style="background:var(--green)"></span>Verificar DNS</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">M01 · Part 8</div>
+    <button class="nav-item" onclick="show('m01p8-vm',this)"><span class="nav-dot" style="background:var(--green)"></span>ManufacturingVM</button>
+    <button class="nav-item" onclick="show('m01p8-rdp',this)"><span class="nav-dot" style="background:var(--red)"></span>RDP + Testes</button>
+    <button class="nav-item" onclick="show('m01p8-peering',this)"><span class="nav-dot" style="background:var(--green)"></span>VNet Peering</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">M02 · Part 3</div>
+    <button class="nav-item" onclick="show('m02p3-vnets',this)"><span class="nav-dot" style="background:var(--green)"></span>Criar VNets</button>
+    <button class="nav-item" onclick="show('m02p3-vms',this)"><span class="nav-dot" style="background:var(--green)"></span>CoreServicesVM + MfgVM</button>
+    <button class="nav-item" onclick="show('m02p3-rdp',this)"><span class="nav-dot" style="background:var(--red)"></span>RDP + Testes</button>
+    <button class="nav-item" onclick="show('m02p3-gw',this)"><span class="nav-dot" style="background:var(--yellow)"></span>VPN Gateways</button>
+    <button class="nav-item" onclick="show('m02p3-conn',this)"><span class="nav-dot" style="background:var(--green)"></span>Conexões VPN</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">M02 · Part 7</div>
+    <button class="nav-item" onclick="show('m02p7-wan',this)"><span class="nav-dot" style="background:var(--green)"></span>Virtual WAN</button>
+    <button class="nav-item" onclick="show('m02p7-hub',this)"><span class="nav-dot" style="background:var(--yellow)"></span>Virtual Hub</button>
+    <button class="nav-item" onclick="show('m02p7-conn',this)"><span class="nav-dot" style="background:var(--green)"></span>Ligar ResearchVnet</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">M03 · Part 4</div>
+    <button class="nav-item" onclick="show('m03p4-vnet',this)"><span class="nav-dot" style="background:var(--green)"></span>VNet + GatewaySubnet</button>
+    <button class="nav-item" onclick="show('m03p4-gw',this)"><span class="nav-dot" style="background:var(--yellow)"></span>ExpressRoute Gateway</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">M03 · Part 5</div>
+    <button class="nav-item" onclick="show('m03p5-circuit',this)"><span class="nav-dot" style="background:var(--green)"></span>ExpressRoute Circuit</button>
+    <button class="nav-item" onclick="show('m03p5-key',this)"><span class="nav-dot" style="background:var(--green)"></span>Service Key</button>
+    <button class="nav-item" onclick="show('m03p5-deprov',this)"><span class="nav-dot" style="background:var(--red)"></span>Deprovision</button>
+  </div>
+</nav>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main">
+
+<!-- HOME -->
+<div id="home" class="section active">
+  <div class="section-header">
+    <div class="section-tag">AZ-700 · Referência</div>
+    <div class="section-title">Lab Reference</div>
+    <div class="section-desc">Clica num tópico para ver o código. Corre sempre as <strong>Variáveis</strong> primeiro em cada sessão.</div>
+  </div>
+
+  <!-- Variáveis -->
+  <div class="index-group">
+    <div class="index-group-label">Variáveis Globais</div>
+    <div class="index-row">
+      <div class="index-card vars" onclick="show('vars-m01',document.querySelector('[onclick*=vars-m01]'))">
+        <span class="index-mod">M01</span>
+        <span class="index-name">Variáveis M01</span>
+        <span class="index-hint">RG · VNets · DNS · VMs · Peerings</span>
+      </div>
+      <div class="index-card vars" onclick="show('vars-m02',document.querySelector('[onclick*=vars-m02]'))">
+        <span class="index-mod">M02</span>
+        <span class="index-name">Variáveis M02</span>
+        <span class="index-hint">VNets · Gateways · Conexões · VWAN</span>
+      </div>
+      <div class="index-card vars" onclick="show('vars-m03',document.querySelector('[onclick*=vars-m03]'))">
+        <span class="index-mod">M03</span>
+        <span class="index-name">Variáveis M03</span>
+        <span class="index-hint">VNet · ER Gateway · ER Circuit</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- M01 -->
+  <div class="index-group">
+    <div class="index-group-label">M01 — Virtual Networks, DNS & Peering</div>
+    <div class="index-row">
+      <div class="index-card" onclick="show('m01p4-vnets',document.querySelector('[onclick*=m01p4-vnets]'))">
+        <span class="index-mod">Part 4</span>
+        <span class="index-name">VNets & Subnets</span>
+        <span class="index-hint">CoreServicesVnet · ManufacturingVnet · ResearchVnet</span>
+      </div>
+      <div class="index-card" onclick="show('m01p4-verify',document.querySelector('[onclick*=m01p4-verify]'))">
+        <span class="index-mod">Part 4</span>
+        <span class="index-name">Verificar VNets</span>
+        <span class="index-hint">Get-AzVirtualNetwork · subnets</span>
+      </div>
+    </div>
+    <div class="index-row">
+      <div class="index-card" onclick="show('m01p6-dns',document.querySelector('[onclick*=m01p6-dns]'))">
+        <span class="index-mod">Part 6</span>
+        <span class="index-name">Private DNS Zone</span>
+        <span class="index-hint">Contoso.com</span>
+      </div>
+      <div class="index-card" onclick="show('m01p6-link',document.querySelector('[onclick*=m01p6-link]'))">
+        <span class="index-mod">Part 6</span>
+        <span class="index-name">VNet Link</span>
+        <span class="index-hint">Auto registration</span>
+      </div>
+      <div class="index-card" onclick="show('m01p6-vms',document.querySelector('[onclick*=m01p6-vms]'))">
+        <span class="index-mod">Part 6</span>
+        <span class="index-name">testvm1 + testvm2</span>
+        <span class="index-hint">DatabaseSubnet · East US</span>
+      </div>
+      <div class="index-card" onclick="show('m01p6-dnscheck',document.querySelector('[onclick*=m01p6-dnscheck]'))">
+        <span class="index-mod">Part 6</span>
+        <span class="index-name">Verificar DNS</span>
+        <span class="index-hint">RecordType A</span>
+      </div>
+    </div>
+    <div class="index-row">
+      <div class="index-card" onclick="show('m01p8-vm',document.querySelector('[onclick*=m01p8-vm]'))">
+        <span class="index-mod">Part 8</span>
+        <span class="index-name">ManufacturingVM</span>
+        <span class="index-hint">West Europe</span>
+      </div>
+      <div class="index-card manual" onclick="show('m01p8-rdp',document.querySelector('[onclick*=m01p8-rdp]'))">
+        <span class="index-mod">Part 8</span>
+        <span class="index-name">RDP + Testes</span>
+        <span class="index-hint">Test-NetConnection · manual</span>
+      </div>
+      <div class="index-card" onclick="show('m01p8-peering',document.querySelector('[onclick*=m01p8-peering]'))">
+        <span class="index-mod">Part 8</span>
+        <span class="index-name">VNet Peering</span>
+        <span class="index-hint">Bidirecional CoreServices ↔ Manufacturing</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- M02 -->
+  <div class="index-group">
+    <div class="index-group-label">M02 — VPN Gateway & Virtual WAN</div>
+    <div class="index-row">
+      <div class="index-card" onclick="show('m02p3-vnets',document.querySelector('[onclick*=m02p3-vnets]'))">
+        <span class="index-mod">Part 3</span>
+        <span class="index-name">Criar VNets</span>
+        <span class="index-hint">Com GatewaySubnet</span>
+      </div>
+      <div class="index-card" onclick="show('m02p3-vms',document.querySelector('[onclick*=m02p3-vms]'))">
+        <span class="index-mod">Part 3</span>
+        <span class="index-name">CoreServicesVM + MfgVM</span>
+        <span class="index-hint">East US · West Europe</span>
+      </div>
+      <div class="index-card manual" onclick="show('m02p3-rdp',document.querySelector('[onclick*=m02p3-rdp]'))">
+        <span class="index-mod">Part 3</span>
+        <span class="index-name">RDP + Testes</span>
+        <span class="index-hint">Antes e após Gateways · manual</span>
+      </div>
+    </div>
+    <div class="index-row">
+      <div class="index-card wait" onclick="show('m02p3-gw',document.querySelector('[onclick*=m02p3-gw]'))">
+        <span class="index-mod">Part 3</span>
+        <span class="index-name">VPN Gateways</span>
+        <span class="index-hint">⏱ 45 min cada</span>
+      </div>
+      <div class="index-card" onclick="show('m02p3-conn',document.querySelector('[onclick*=m02p3-conn]'))">
+        <span class="index-mod">Part 3</span>
+        <span class="index-name">Conexões VPN</span>
+        <span class="index-hint">Vnet2Vnet · SharedKey</span>
+      </div>
+    </div>
+    <div class="index-row">
+      <div class="index-card" onclick="show('m02p7-wan',document.querySelector('[onclick*=m02p7-wan]'))">
+        <span class="index-mod">Part 7</span>
+        <span class="index-name">Virtual WAN</span>
+        <span class="index-hint">ContosoVirtualWAN</span>
+      </div>
+      <div class="index-card wait" onclick="show('m02p7-hub',document.querySelector('[onclick*=m02p7-hub]'))">
+        <span class="index-mod">Part 7</span>
+        <span class="index-name">Virtual Hub</span>
+        <span class="index-hint">⏱ 30 min</span>
+      </div>
+      <div class="index-card" onclick="show('m02p7-conn',document.querySelector('[onclick*=m02p7-conn]'))">
+        <span class="index-mod">Part 7</span>
+        <span class="index-name">Ligar ResearchVnet</span>
+        <span class="index-hint">VirtualHubVnetConnection</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- M03 -->
+  <div class="index-group">
+    <div class="index-group-label">M03 — ExpressRoute</div>
+    <div class="index-row">
+      <div class="index-card" onclick="show('m03p4-vnet',document.querySelector('[onclick*=m03p4-vnet]'))">
+        <span class="index-mod">Part 4</span>
+        <span class="index-name">VNet + GatewaySubnet</span>
+        <span class="index-hint">CoreServicesVNet</span>
+      </div>
+      <div class="index-card wait" onclick="show('m03p4-gw',document.querySelector('[onclick*=m03p4-gw]'))">
+        <span class="index-mod">Part 4</span>
+        <span class="index-name">ExpressRoute Gateway</span>
+        <span class="index-hint">⏱ 45 min · SKU Standard</span>
+      </div>
+    </div>
+    <div class="index-row">
+      <div class="index-card danger" onclick="show('m03p5-circuit',document.querySelector('[onclick*=m03p5-circuit]'))">
+        <span class="index-mod">Part 5</span>
+        <span class="index-name">ExpressRoute Circuit</span>
+        <span class="index-hint">⚠ Faturação imediata</span>
+      </div>
+      <div class="index-card" onclick="show('m03p5-key',document.querySelector('[onclick*=m03p5-key]'))">
+        <span class="index-mod">Part 5</span>
+        <span class="index-name">Service Key</span>
+        <span class="index-hint">Enviar ao provider</span>
+      </div>
+      <div class="index-card danger" onclick="show('m03p5-deprov',document.querySelector('[onclick*=m03p5-deprov]'))">
+        <span class="index-mod">Part 5</span>
+        <span class="index-name">Deprovision</span>
+        <span class="index-hint">⚠ Só após NotProvisioned</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VARIÁVEIS M01 -->
+<div id="vars-m01" class="section">
+  <div class="section-header"><div class="section-tag">Global · M01</div><div class="section-title">Variáveis M01</div><div class="section-desc">Corre este bloco primeiro. As variáveis não persistem quando fechas o terminal.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">az700-m01-variaveis.ps1</span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$RG</span>                 = <span class="s">"ContosoResourceGrouplod61979644"</span>
+<span class="v">$LOCATION_EASTUS</span>    = <span class="s">"eastus"</span>
+<span class="v">$LOCATION_WESTEU</span>    = <span class="s">"westeurope"</span>
+<span class="v">$LOCATION_SOUTHASIA</span> = <span class="s">"southeastasia"</span>
+
+<span class="c"># CoreServicesVnet</span>
+<span class="v">$VNET1_NAME</span>      = <span class="s">"CoreServicesVnet"</span>      ; <span class="v">$VNET1_PREFIX</span>    = <span class="s">"10.20.0.0/16"</span>
+<span class="v">$VNET1_SUB1_NAME</span> = <span class="s">"GatewaySubnet"</span>         ; <span class="v">$VNET1_SUB1</span>      = <span class="s">"10.20.0.0/27"</span>
+<span class="v">$VNET1_SUB2_NAME</span> = <span class="s">"DatabaseSubnet"</span>        ; <span class="v">$VNET1_SUB2</span>      = <span class="s">"10.20.20.0/24"</span>
+<span class="v">$VNET1_SUB3_NAME</span> = <span class="s">"SharedServicesSubnet"</span>  ; <span class="v">$VNET1_SUB3</span>      = <span class="s">"10.20.10.0/24"</span>
+<span class="v">$VNET1_SUB4_NAME</span> = <span class="s">"PublicWebServiceSubnet"</span>; <span class="v">$VNET1_SUB4</span>      = <span class="s">"10.20.30.0/24"</span>
+
+<span class="c"># ManufacturingVnet</span>
+<span class="v">$VNET2_NAME</span>      = <span class="s">"ManufacturingVnet"</span>         ; <span class="v">$VNET2_PREFIX</span>    = <span class="s">"10.30.0.0/16"</span>
+<span class="v">$VNET2_SUB1_NAME</span> = <span class="s">"ManufacturingSystemSubnet"</span>; <span class="v">$VNET2_SUB1</span>      = <span class="s">"10.30.10.0/24"</span>
+<span class="v">$VNET2_SUB2_NAME</span> = <span class="s">"SensorSubnet1"</span>            ; <span class="v">$VNET2_SUB2</span>      = <span class="s">"10.30.20.0/24"</span>
+<span class="v">$VNET2_SUB3_NAME</span> = <span class="s">"SensorSubnet2"</span>            ; <span class="v">$VNET2_SUB3</span>      = <span class="s">"10.30.21.0/24"</span>
+<span class="v">$VNET2_SUB4_NAME</span> = <span class="s">"SensorSubnet3"</span>            ; <span class="v">$VNET2_SUB4</span>      = <span class="s">"10.30.22.0/24"</span>
+
+<span class="c"># ResearchVnet</span>
+<span class="v">$VNET3_NAME</span>      = <span class="s">"ResearchVnet"</span>        ; <span class="v">$VNET3_PREFIX</span>    = <span class="s">"10.40.0.0/16"</span>
+<span class="v">$VNET3_SUB1_NAME</span> = <span class="s">"ResearchSystemSubnet"</span>; <span class="v">$VNET3_SUB1</span>      = <span class="s">"10.40.0.0/24"</span>
+
+<span class="c"># DNS</span>
+<span class="v">$DNS_ZONE</span>      = <span class="s">"Contoso.com"</span>
+<span class="v">$DNS_LINK_NAME</span> = <span class="s">"CoreServicesVnetLink"</span>
+
+<span class="c"># VMs Part 6</span>
+<span class="v">$VM1_NAME</span> = <span class="s">"testvm1"</span>; <span class="v">$NIC1_NAME</span> = <span class="s">"testvm1-nic"</span>; <span class="v">$NSG1_NAME</span> = <span class="s">"testvm1-nsg"</span>; <span class="v">$PIP1_NAME</span> = <span class="s">"testvm1-pip"</span>
+<span class="v">$VM2_NAME</span> = <span class="s">"testvm2"</span>; <span class="v">$NIC2_NAME</span> = <span class="s">"testvm2-nic"</span>; <span class="v">$NSG2_NAME</span> = <span class="s">"testvm2-nsg"</span>; <span class="v">$PIP2_NAME</span> = <span class="s">"testvm2-pip"</span>
+
+<span class="c"># VM Part 8</span>
+<span class="v">$MFG_VM_NAME</span>     = <span class="s">"ManufacturingVM"</span>          ; <span class="v">$MFG_SUBNET_NAME</span> = <span class="s">"ManufacturingSystemSubnet"</span>
+<span class="v">$MFG_NIC_NAME</span>    = <span class="s">"ManufacturingVM-nic"</span>
+<span class="v">$MFG_NSG_NAME</span>    = <span class="s">"ManufacturingVM-nsg"</span>
+<span class="v">$MFG_PIP_NAME</span>    = <span class="s">"ManufacturingVM-pip"</span>
+
+<span class="c"># Peerings Part 8</span>
+<span class="v">$PEERING1_NAME</span> = <span class="s">"CoreServicesVnet-to-ManufacturingVnet"</span>
+<span class="v">$PEERING2_NAME</span> = <span class="s">"ManufacturingVnet-to-CoreServicesVnet"</span>
+
+<span class="v">$VM_SIZE</span>    = <span class="s">"Standard_D2s_v3"</span>
+<span class="v">$ADMIN_USER</span> = <span class="s">"TestUser"</span></pre></div>
+</div>
+
+<!-- VARIÁVEIS M02 -->
+<div id="vars-m02" class="section">
+  <div class="section-header"><div class="section-tag">Global · M02</div><div class="section-title">Variáveis M02</div><div class="section-desc">Corre este bloco primeiro em qualquer sessão do M02.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">az700-m02-variaveis.ps1</span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$RG</span>              = <span class="s">"ContosoResourceGroup"</span>
+<span class="v">$LOCATION_EASTUS</span> = <span class="s">"eastus"</span>
+<span class="v">$LOCATION_WESTEU</span> = <span class="s">"westeurope"</span>
+
+<span class="c"># CoreServicesVnet</span>
+<span class="v">$VNET1_NAME</span>      = <span class="s">"CoreServicesVnet"</span>      ; <span class="v">$VNET1_PREFIX</span>    = <span class="s">"10.20.0.0/16"</span>
+<span class="v">$VNET1_GW_NAME</span>   = <span class="s">"GatewaySubnet"</span>         ; <span class="v">$VNET1_GW</span>        = <span class="s">"10.20.0.0/27"</span>
+<span class="v">$VNET1_SUB1_NAME</span> = <span class="s">"DatabaseSubnet"</span>        ; <span class="v">$VNET1_SUB1</span>      = <span class="s">"10.20.20.0/24"</span>
+<span class="v">$VNET1_SUB2_NAME</span> = <span class="s">"SharedServicesSubnet"</span>  ; <span class="v">$VNET1_SUB2</span>      = <span class="s">"10.20.10.0/24"</span>
+<span class="v">$VNET1_SUB3_NAME</span> = <span class="s">"PublicWebServiceSubnet"</span>; <span class="v">$VNET1_SUB3</span>      = <span class="s">"10.20.30.0/24"</span>
+
+<span class="c"># ManufacturingVnet</span>
+<span class="v">$VNET2_NAME</span>      = <span class="s">"ManufacturingVnet"</span>         ; <span class="v">$VNET2_PREFIX</span>    = <span class="s">"10.30.0.0/16"</span>
+<span class="v">$VNET2_GW_NAME</span>   = <span class="s">"GatewaySubnet"</span>             ; <span class="v">$VNET2_GW</span>        = <span class="s">"10.30.0.0/27"</span>
+<span class="v">$VNET2_SUB1_NAME</span> = <span class="s">"ManufacturingSystemSubnet"</span> ; <span class="v">$VNET2_SUB1</span>      = <span class="s">"10.30.10.0/24"</span>
+<span class="v">$VNET2_SUB2_NAME</span> = <span class="s">"SensorSubnet1"</span>             ; <span class="v">$VNET2_SUB2</span>      = <span class="s">"10.30.20.0/24"</span>
+<span class="v">$VNET2_SUB3_NAME</span> = <span class="s">"SensorSubnet2"</span>             ; <span class="v">$VNET2_SUB3</span>      = <span class="s">"10.30.21.0/24"</span>
+<span class="v">$VNET2_SUB4_NAME</span> = <span class="s">"SensorSubnet3"</span>             ; <span class="v">$VNET2_SUB4</span>      = <span class="s">"10.30.22.0/24"</span>
+
+<span class="c"># ResearchVnet</span>
+<span class="v">$VNET3_NAME</span>      = <span class="s">"ResearchVnet"</span>        ; <span class="v">$VNET3_PREFIX</span>    = <span class="s">"10.40.0.0/16"</span>
+<span class="v">$VNET3_SUB1_NAME</span> = <span class="s">"ResearchSystemSubnet"</span>; <span class="v">$VNET3_SUB1</span>      = <span class="s">"10.40.0.0/24"</span>
+
+<span class="c"># VPN Gateways</span>
+<span class="v">$GW1_NAME</span>   = <span class="s">"CoreServicesVnetGateway"</span>  ; <span class="v">$GW1_PIP</span> = <span class="s">"CoreServicesVnetGateway-ip"</span>
+<span class="v">$GW2_NAME</span>   = <span class="s">"ManufacturingVnetGateway"</span> ; <span class="v">$GW2_PIP</span> = <span class="s">"ManufacturingVnetGateway-ip"</span>
+<span class="v">$GW_SKU</span>     = <span class="s">"VpnGw1AZ"</span>                 ; <span class="v">$GW_GEN</span>  = <span class="s">"Generation1"</span>
+
+<span class="c"># Conexões VPN</span>
+<span class="v">$CONN1_NAME</span> = <span class="s">"CoreServicesGW-to-ManufacturingGW"</span>
+<span class="v">$CONN2_NAME</span> = <span class="s">"ManufacturingGW-to-CoreServicesGW"</span>
+<span class="v">$SHARED_KEY</span> = <span class="s">"abc123"</span>
+
+<span class="c"># VMs</span>
+<span class="v">$VM1_NAME</span> = <span class="s">"CoreServicesVM"</span>  ; <span class="v">$VM1_NIC</span> = <span class="s">"CoreServicesVM-nic"</span> ; <span class="v">$VM1_NSG</span> = <span class="s">"CoreServicesVM-nsg"</span> ; <span class="v">$VM1_PIP</span> = <span class="s">"CoreServicesVM-pip"</span>
+<span class="v">$VM2_NAME</span> = <span class="s">"ManufacturingVM"</span> ; <span class="v">$VM2_NIC</span> = <span class="s">"ManufacturingVM-nic"</span>; <span class="v">$VM2_NSG</span> = <span class="s">"ManufacturingVM-nsg"</span>; <span class="v">$VM2_PIP</span> = <span class="s">"ManufacturingVM-pip"</span>
+<span class="v">$VM_SIZE</span>    = <span class="s">"Standard_D2s_v3"</span>; <span class="v">$ADMIN_USER</span> = <span class="s">"TestUser"</span>
+
+<span class="c"># Virtual WAN</span>
+<span class="v">$VWAN_NAME</span>  = <span class="s">"ContosoVirtualWAN"</span>; <span class="v">$HUB_NAME</span>  = <span class="s">"ContosoHub"</span>
+<span class="v">$HUB_PREFIX</span> = <span class="s">"10.60.0.0/24"</span>     ; <span class="v">$VWAN_CONN</span> = <span class="s">"ContosoVirtualWAN-to-ResearchVNet"</span></pre></div>
+</div>
+
+<!-- VARIÁVEIS M03 -->
+<div id="vars-m03" class="section">
+  <div class="section-header"><div class="section-tag">Global · M03</div><div class="section-title">Variáveis M03</div><div class="section-desc">Corre este bloco primeiro em qualquer sessão do M03.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">az700-m03-variaveis.ps1</span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$RG_CORE</span>  = <span class="s">"ContosoResourceGroup"</span>
+<span class="v">$RG_ER</span>    = <span class="s">"ExpressRouteResourceGroup"</span>
+<span class="v">$LOCATION</span> = <span class="s">"eastus"</span>
+<span class="v">$LOCATION2</span>= <span class="s">"eastus2"</span>
+
+<span class="c"># Part 4 - ExpressRoute Gateway</span>
+<span class="v">$VNET_NAME</span>   = <span class="s">"CoreServicesVNet"</span>          ; <span class="v">$VNET_PREFIX</span> = <span class="s">"10.20.0.0/16"</span>
+<span class="v">$GW_SUB_NAME</span> = <span class="s">"GatewaySubnet"</span>             ; <span class="v">$GW_SUB</span>      = <span class="s">"10.20.0.0/27"</span>
+<span class="v">$GW_NAME</span>     = <span class="s">"CoreServicesVnetGateway"</span>
+<span class="v">$GW_PIP</span>      = <span class="s">"CoreServicesVnetGateway-ip"</span>
+<span class="v">$GW_SKU</span>      = <span class="s">"Standard"</span>
+
+<span class="c"># Part 5 - ExpressRoute Circuit</span>
+<span class="v">$ER_NAME</span>     = <span class="s">"TestERCircuit"</span>
+<span class="v">$ER_LOCATION</span> = <span class="s">"eastus2"</span>
+<span class="v">$ER_PEERING</span>  = <span class="s">"Seattle"</span>
+<span class="v">$ER_PROVIDER</span> = <span class="s">"Equinix"</span>
+<span class="v">$ER_BW</span>       = 50
+<span class="v">$ER_SKU</span>      = <span class="s">"Standard"</span>
+<span class="v">$ER_BILLING</span>  = <span class="s">"MeteredData"</span></pre></div>
+</div>
+
+<!-- M01 P4 VNETS -->
+<div id="m01p4-vnets" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 4 · Tasks 1-4</div><div class="section-title">Criar VNets & Subnets</div><div class="section-desc">Resource Group + 3 VNets em regiões diferentes.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">Resource Group <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">New-AzResourceGroup</span> <span class="k">-Name</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span>
+<span class="p">Get-AzResourceGroup</span> <span class="k">-Name</span> <span class="v">$RG</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">CoreServicesVnet — East US <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$gw</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_SUB1</span>
+<span class="v">$db</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB2_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_SUB2</span>
+<span class="v">$ss</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB3_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_SUB3</span>
+<span class="v">$web</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB4_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_SUB4</span>
+<span class="p">New-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_PREFIX</span> <span class="k">-Subnet</span> <span class="v">$gw,$db,$ss,$web</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">ManufacturingVnet — West Europe <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$mfg</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB1</span>
+<span class="v">$sen1</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB2_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB2</span>
+<span class="v">$sen2</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB3_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB3</span>
+<span class="v">$sen3</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB4_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB4</span>
+<span class="p">New-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_PREFIX</span> <span class="k">-Subnet</span> <span class="v">$mfg,$sen1,$sen2,$sen3</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">ResearchVnet — Southeast Asia <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$res</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET3_SUB1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET3_SUB1</span>
+<span class="p">New-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_SOUTHASIA</span> <span class="k">-Name</span> <span class="v">$VNET3_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET3_PREFIX</span> <span class="k">-Subnet</span> <span class="v">$res</span></pre></div>
+</div>
+
+<!-- M01 P4 VERIFY -->
+<div id="m01p4-verify" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 4 · Task 5</div><div class="section-title">Verificar VNets & Subnets</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">Get-AzVirtualNetwork <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span> | <span class="p">Select-Object</span> Name, Location, AddressSpace
+<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> (<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span>) | <span class="p">Select-Object</span> Name, AddressPrefix
+
+<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span> | <span class="p">Select-Object</span> Name, Location, AddressSpace
+<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> (<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span>) | <span class="p">Select-Object</span> Name, AddressPrefix
+
+<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET3_NAME</span> | <span class="p">Select-Object</span> Name, Location, AddressSpace
+<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> (<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET3_NAME</span>) | <span class="p">Select-Object</span> Name, AddressPrefix
+
+<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> | <span class="p">Select-Object</span> Name, Location, AddressSpace</pre></div>
+</div>
+
+<!-- M01 P6 DNS -->
+<div id="m01p6-dns" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 6 · Task 1</div><div class="section-title">Private DNS Zone</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzPrivateDnsZone <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">New-AzPrivateDnsZone</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$DNS_ZONE</span>
+<span class="p">Get-AzPrivateDnsZone</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$DNS_ZONE</span></pre></div>
+</div>
+
+<!-- M01 P6 LINK -->
+<div id="m01p6-link" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 6 · Task 2</div><div class="section-title">VNet Link</div><div class="section-desc">Liga CoreServicesVnet à DNS Zone com auto registration.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzPrivateDnsVirtualNetworkLink <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$vnet</span> = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span>
+<span class="p">New-AzPrivateDnsVirtualNetworkLink</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-ZoneName</span> <span class="v">$DNS_ZONE</span> <span class="k">-Name</span> <span class="v">$DNS_LINK_NAME</span> <span class="k">-VirtualNetworkId</span> <span class="v">$vnet</span>.Id <span class="k">-EnableRegistration</span>
+<span class="p">Get-AzPrivateDnsVirtualNetworkLink</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-ZoneName</span> <span class="v">$DNS_ZONE</span> <span class="k">-Name</span> <span class="v">$DNS_LINK_NAME</span></pre></div>
+</div>
+
+<!-- M01 P6 VMS -->
+<div id="m01p6-vms" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 6 · Task 3</div><div class="section-title">testvm1 + testvm2</div><div class="section-desc">Cria as duas VMs na DatabaseSubnet da CoreServicesVnet.</div></div>
+  <div class="note">⚠ O script pede a password interativamente — não fica guardada no código.</div>
+  <div class="block"><div class="block-header"><span class="block-title">testvm1 <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$adminPassword</span> = <span class="p">Read-Host</span> <span class="s">"Password"</span> <span class="k">-AsSecureString</span>
+<span class="v">$credential</span>    = <span class="p">New-Object</span> System.Management.Automation.PSCredential(<span class="v">$ADMIN_USER</span>, <span class="v">$adminPassword</span>)
+<span class="v">$vnet</span>          = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span>
+<span class="v">$subnetId</span>      = (<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB2_NAME</span>).Id
+<span class="v">$pip1</span>     = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$PIP1_NAME</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static
+<span class="v">$nsgRule1</span> = <span class="p">New-AzNetworkSecurityRuleConfig</span> <span class="k">-Name</span> <span class="s">"default-allow-rdp"</span> <span class="k">-Priority</span> 1000 <span class="k">-Protocol</span> Tcp <span class="k">-Access</span> Allow <span class="k">-Direction</span> Inbound <span class="k">-SourceAddressPrefix</span> * <span class="k">-SourcePortRange</span> * <span class="k">-DestinationAddressPrefix</span> * <span class="k">-DestinationPortRange</span> 3389
+<span class="v">$nsg1</span>     = <span class="p">New-AzNetworkSecurityGroup</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$NSG1_NAME</span> <span class="k">-SecurityRules</span> <span class="v">$nsgRule1</span>
+<span class="v">$nic1</span>     = <span class="p">New-AzNetworkInterface</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$NIC1_NAME</span> <span class="k">-SubnetId</span> <span class="v">$subnetId</span> <span class="k">-PublicIpAddressId</span> <span class="v">$pip1</span>.Id <span class="k">-NetworkSecurityGroupId</span> <span class="v">$nsg1</span>.Id
+<span class="v">$vm1Config</span> = <span class="p">New-AzVMConfig</span> <span class="k">-VMName</span> <span class="v">$VM1_NAME</span> <span class="k">-VMSize</span> <span class="v">$VM_SIZE</span> | <span class="p">Set-AzVMOperatingSystem</span> <span class="k">-Windows -ComputerName</span> <span class="v">$VM1_NAME</span> <span class="k">-Credential</span> <span class="v">$credential</span> | <span class="p">Set-AzVMSourceImage</span> <span class="k">-PublisherName</span> MicrosoftWindowsServer <span class="k">-Offer</span> WindowsServer <span class="k">-Skus</span> 2019-Datacenter <span class="k">-Version</span> latest | <span class="p">Add-AzVMNetworkInterface</span> <span class="k">-Id</span> <span class="v">$nic1</span>.Id
+<span class="p">New-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-VM</span> <span class="v">$vm1Config</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">testvm2 <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$pip2</span>     = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$PIP2_NAME</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static
+<span class="v">$nsgRule2</span> = <span class="p">New-AzNetworkSecurityRuleConfig</span> <span class="k">-Name</span> <span class="s">"default-allow-rdp"</span> <span class="k">-Priority</span> 1000 <span class="k">-Protocol</span> Tcp <span class="k">-Access</span> Allow <span class="k">-Direction</span> Inbound <span class="k">-SourceAddressPrefix</span> * <span class="k">-SourcePortRange</span> * <span class="k">-DestinationAddressPrefix</span> * <span class="k">-DestinationPortRange</span> 3389
+<span class="v">$nsg2</span>     = <span class="p">New-AzNetworkSecurityGroup</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$NSG2_NAME</span> <span class="k">-SecurityRules</span> <span class="v">$nsgRule2</span>
+<span class="v">$nic2</span>     = <span class="p">New-AzNetworkInterface</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$NIC2_NAME</span> <span class="k">-SubnetId</span> <span class="v">$subnetId</span> <span class="k">-PublicIpAddressId</span> <span class="v">$pip2</span>.Id <span class="k">-NetworkSecurityGroupId</span> <span class="v">$nsg2</span>.Id
+<span class="v">$vm2Config</span> = <span class="p">New-AzVMConfig</span> <span class="k">-VMName</span> <span class="v">$VM2_NAME</span> <span class="k">-VMSize</span> <span class="v">$VM_SIZE</span> | <span class="p">Set-AzVMOperatingSystem</span> <span class="k">-Windows -ComputerName</span> <span class="v">$VM2_NAME</span> <span class="k">-Credential</span> <span class="v">$credential</span> | <span class="p">Set-AzVMSourceImage</span> <span class="k">-PublisherName</span> MicrosoftWindowsServer <span class="k">-Offer</span> WindowsServer <span class="k">-Skus</span> 2019-Datacenter <span class="k">-Version</span> latest | <span class="p">Add-AzVMNetworkInterface</span> <span class="k">-Id</span> <span class="v">$nic2</span>.Id
+<span class="p">New-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-VM</span> <span class="v">$vm2Config</span>
+<span class="p">Get-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> | <span class="p">Select-Object</span> Name, Location</pre></div>
+</div>
+
+<!-- M01 P6 DNS CHECK -->
+<div id="m01p6-dnscheck" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 6 · Task 4</div><div class="section-title">Verificar registos DNS</div><div class="section-desc">Os registos A aparecem automaticamente após as VMs arrancarem.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">Get-AzPrivateDnsRecordSet <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">Get-AzPrivateDnsRecordSet</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-ZoneName</span> <span class="v">$DNS_ZONE</span> <span class="k">-RecordType</span> A</pre></div>
+</div>
+
+<!-- M01 P8 VM -->
+<div id="m01p8-vm" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 8 · Task 1</div><div class="section-title">ManufacturingVM</div><div class="section-desc">Cria a ManufacturingVM na ManufacturingSystemSubnet em West Europe.</div></div>
+  <div class="note">⚠ Reutiliza o $credential da Part 6 — se estiveres numa nova sessão corre o Read-Host primeiro.</div>
+  <div class="block"><div class="block-header"><span class="block-title">ManufacturingVM <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$vnet2</span>     = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span>
+<span class="v">$subnetId2</span> = (<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet2</span> <span class="k">-Name</span> <span class="v">$MFG_SUBNET_NAME</span>).Id
+<span class="v">$pip</span>      = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$MFG_PIP_NAME</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static
+<span class="v">$nsgRule</span>  = <span class="p">New-AzNetworkSecurityRuleConfig</span> <span class="k">-Name</span> <span class="s">"default-allow-rdp"</span> <span class="k">-Priority</span> 1000 <span class="k">-Protocol</span> Tcp <span class="k">-Access</span> Allow <span class="k">-Direction</span> Inbound <span class="k">-SourceAddressPrefix</span> * <span class="k">-SourcePortRange</span> * <span class="k">-DestinationAddressPrefix</span> * <span class="k">-DestinationPortRange</span> 3389
+<span class="v">$nsg</span>      = <span class="p">New-AzNetworkSecurityGroup</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$MFG_NSG_NAME</span> <span class="k">-SecurityRules</span> <span class="v">$nsgRule</span>
+<span class="v">$nic</span>      = <span class="p">New-AzNetworkInterface</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$MFG_NIC_NAME</span> <span class="k">-SubnetId</span> <span class="v">$subnetId2</span> <span class="k">-PublicIpAddressId</span> <span class="v">$pip</span>.Id <span class="k">-NetworkSecurityGroupId</span> <span class="v">$nsg</span>.Id
+<span class="v">$vmConfig</span> = <span class="p">New-AzVMConfig</span> <span class="k">-VMName</span> <span class="v">$MFG_VM_NAME</span> <span class="k">-VMSize</span> <span class="v">$VM_SIZE</span> | <span class="p">Set-AzVMOperatingSystem</span> <span class="k">-Windows -ComputerName</span> <span class="v">$MFG_VM_NAME</span> <span class="k">-Credential</span> <span class="v">$credential</span> | <span class="p">Set-AzVMSourceImage</span> <span class="k">-PublisherName</span> MicrosoftWindowsServer <span class="k">-Offer</span> WindowsServer <span class="k">-Skus</span> 2019-Datacenter <span class="k">-Version</span> latest | <span class="p">Add-AzVMNetworkInterface</span> <span class="k">-Id</span> <span class="v">$nic</span>.Id
+<span class="p">New-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-VM</span> <span class="v">$vmConfig</span>
+<span class="p">Get-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$MFG_VM_NAME</span> | <span class="p">Select-Object</span> Name, Location</pre></div>
+</div>
+
+<!-- M01 P8 RDP -->
+<div id="m01p8-rdp" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 8 · Tasks 2-3 e 5</div><div class="section-title">Testes manuais via RDP</div></div>
+  <div class="manual-block"><strong>TASKS 2-3 — Antes do peering (esperado: falhar)</strong><br>Ligar via RDP ao ManufacturingVM e ao testvm1.<br>No ManufacturingVM correr:<br><br><code>Test-NetConnection 10.20.20.4 -port 3389</code><br><br>Esperado: TcpTestSucceeded: <strong style="color:var(--red)">False</strong></div>
+  <div class="manual-block"><strong>TASK 5 — Após peering (esperado: sucesso)</strong><br>No ManufacturingVM correr:<br><br><code>Test-NetConnection 10.20.20.4 -port 3389</code><br><br>Esperado: TcpTestSucceeded: <strong style="color:var(--green)">True</strong></div>
+</div>
+
+<!-- M01 P8 PEERING -->
+<div id="m01p8-peering" class="section">
+  <div class="section-header"><div class="section-tag">M01 · Part 8 · Task 4</div><div class="section-title">VNet Peering</div><div class="section-desc">Peering bidirecional entre CoreServicesVnet e ManufacturingVnet.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">Add-AzVirtualNetworkPeering <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$vnet1</span> = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span>
+<span class="v">$vnet2</span> = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span>
+<span class="p">Add-AzVirtualNetworkPeering</span> <span class="k">-Name</span> <span class="v">$PEERING1_NAME</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet1</span> <span class="k">-RemoteVirtualNetworkId</span> <span class="v">$vnet2</span>.Id <span class="k">-AllowForwardedTraffic</span>
+<span class="p">Add-AzVirtualNetworkPeering</span> <span class="k">-Name</span> <span class="v">$PEERING2_NAME</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet2</span> <span class="k">-RemoteVirtualNetworkId</span> <span class="v">$vnet1</span>.Id <span class="k">-AllowForwardedTraffic</span>
+<span class="p">Get-AzVirtualNetworkPeering</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-VirtualNetworkName</span> <span class="v">$VNET1_NAME</span> | <span class="p">Select-Object</span> Name, PeeringState
+<span class="p">Get-AzVirtualNetworkPeering</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-VirtualNetworkName</span> <span class="v">$VNET2_NAME</span> | <span class="p">Select-Object</span> Name, PeeringState</pre></div>
+</div>
+
+<!-- M02 P3 VNETS -->
+<div id="m02p3-vnets" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 3 · Task 1</div><div class="section-title">Criar VNets</div><div class="section-desc">CoreServicesVnet (East US) e ManufacturingVnet (West Europe) com GatewaySubnet.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">Resource Group + VNets <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">New-AzResourceGroup</span> <span class="k">-Name</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span>
+
+<span class="v">$gw1</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_GW_NAME</span>   <span class="k">-AddressPrefix</span> <span class="v">$VNET1_GW</span>
+<span class="v">$db</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_SUB1</span>
+<span class="v">$ss</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB2_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_SUB2</span>
+<span class="v">$web</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB3_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_SUB3</span>
+<span class="p">New-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET1_PREFIX</span> <span class="k">-Subnet</span> <span class="v">$gw1,$db,$ss,$web</span>
+
+<span class="v">$gw2</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_GW_NAME</span>   <span class="k">-AddressPrefix</span> <span class="v">$VNET2_GW</span>
+<span class="v">$mfg</span>  = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB1</span>
+<span class="v">$sen1</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB2_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB2</span>
+<span class="v">$sen2</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB3_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB3</span>
+<span class="v">$sen3</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB4_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_SUB4</span>
+<span class="p">New-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET2_PREFIX</span> <span class="k">-Subnet</span> <span class="v">$gw2,$mfg,$sen1,$sen2,$sen3</span>
+
+<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> | <span class="p">Select-Object</span> Name, Location</pre></div>
+</div>
+
+<!-- M02 P3 VMS -->
+<div id="m02p3-vms" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 3 · Tasks 2-3</div><div class="section-title">CoreServicesVM + ManufacturingVM</div></div>
+  <div class="note">⚠ O script pede a password uma única vez para ambas as VMs.</div>
+  <div class="block"><div class="block-header"><span class="block-title">CoreServicesVM — East US <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$adminPassword</span> = <span class="p">Read-Host</span> <span class="s">"Password"</span> <span class="k">-AsSecureString</span>
+<span class="v">$credential</span>    = <span class="p">New-Object</span> System.Management.Automation.PSCredential(<span class="v">$ADMIN_USER</span>, <span class="v">$adminPassword</span>)
+<span class="v">$vnet1</span>         = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span>
+<span class="v">$subnetId1</span>     = (<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet1</span> <span class="k">-Name</span> <span class="v">$VNET1_SUB1_NAME</span>).Id
+<span class="v">$pip1</span>     = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$VM1_PIP</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static
+<span class="v">$nsgRule1</span> = <span class="p">New-AzNetworkSecurityRuleConfig</span> <span class="k">-Name</span> <span class="s">"default-allow-rdp"</span> <span class="k">-Priority</span> 1000 <span class="k">-Protocol</span> Tcp <span class="k">-Access</span> Allow <span class="k">-Direction</span> Inbound <span class="k">-SourceAddressPrefix</span> * <span class="k">-SourcePortRange</span> * <span class="k">-DestinationAddressPrefix</span> * <span class="k">-DestinationPortRange</span> 3389
+<span class="v">$nsg1</span>     = <span class="p">New-AzNetworkSecurityGroup</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$VM1_NSG</span> <span class="k">-SecurityRules</span> <span class="v">$nsgRule1</span>
+<span class="v">$nic1</span>     = <span class="p">New-AzNetworkInterface</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$VM1_NIC</span> <span class="k">-SubnetId</span> <span class="v">$subnetId1</span> <span class="k">-PublicIpAddressId</span> <span class="v">$pip1</span>.Id <span class="k">-NetworkSecurityGroupId</span> <span class="v">$nsg1</span>.Id
+<span class="v">$vm1Config</span> = <span class="p">New-AzVMConfig</span> <span class="k">-VMName</span> <span class="v">$VM1_NAME</span> <span class="k">-VMSize</span> <span class="v">$VM_SIZE</span> | <span class="p">Set-AzVMOperatingSystem</span> <span class="k">-Windows -ComputerName</span> <span class="v">$VM1_NAME</span> <span class="k">-Credential</span> <span class="v">$credential</span> | <span class="p">Set-AzVMSourceImage</span> <span class="k">-PublisherName</span> MicrosoftWindowsServer <span class="k">-Offer</span> WindowsServer <span class="k">-Skus</span> 2019-Datacenter <span class="k">-Version</span> latest | <span class="p">Add-AzVMNetworkInterface</span> <span class="k">-Id</span> <span class="v">$nic1</span>.Id
+<span class="p">New-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-VM</span> <span class="v">$vm1Config</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">ManufacturingVM — West Europe <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$vnet2</span>     = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span>
+<span class="v">$subnetId2</span> = (<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet2</span> <span class="k">-Name</span> <span class="v">$VNET2_SUB1_NAME</span>).Id
+<span class="v">$pip2</span>     = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$VM2_PIP</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static
+<span class="v">$nsgRule2</span> = <span class="p">New-AzNetworkSecurityRuleConfig</span> <span class="k">-Name</span> <span class="s">"default-allow-rdp"</span> <span class="k">-Priority</span> 1000 <span class="k">-Protocol</span> Tcp <span class="k">-Access</span> Allow <span class="k">-Direction</span> Inbound <span class="k">-SourceAddressPrefix</span> * <span class="k">-SourcePortRange</span> * <span class="k">-DestinationAddressPrefix</span> * <span class="k">-DestinationPortRange</span> 3389
+<span class="v">$nsg2</span>     = <span class="p">New-AzNetworkSecurityGroup</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$VM2_NSG</span> <span class="k">-SecurityRules</span> <span class="v">$nsgRule2</span>
+<span class="v">$nic2</span>     = <span class="p">New-AzNetworkInterface</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$VM2_NIC</span> <span class="k">-SubnetId</span> <span class="v">$subnetId2</span> <span class="k">-PublicIpAddressId</span> <span class="v">$pip2</span>.Id <span class="k">-NetworkSecurityGroupId</span> <span class="v">$nsg2</span>.Id
+<span class="v">$vm2Config</span> = <span class="p">New-AzVMConfig</span> <span class="k">-VMName</span> <span class="v">$VM2_NAME</span> <span class="k">-VMSize</span> <span class="v">$VM_SIZE</span> | <span class="p">Set-AzVMOperatingSystem</span> <span class="k">-Windows -ComputerName</span> <span class="v">$VM2_NAME</span> <span class="k">-Credential</span> <span class="v">$credential</span> | <span class="p">Set-AzVMSourceImage</span> <span class="k">-PublisherName</span> MicrosoftWindowsServer <span class="k">-Offer</span> WindowsServer <span class="k">-Skus</span> 2019-Datacenter <span class="k">-Version</span> latest | <span class="p">Add-AzVMNetworkInterface</span> <span class="k">-Id</span> <span class="v">$nic2</span>.Id
+<span class="p">New-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-VM</span> <span class="v">$vm2Config</span>
+<span class="p">Get-AzVM</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> | <span class="p">Select-Object</span> Name, Location</pre></div>
+</div>
+
+<!-- M02 P3 RDP -->
+<div id="m02p3-rdp" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 3 · Tasks 4-5 e 10-11</div><div class="section-title">Testes manuais via RDP</div></div>
+  <div class="manual-block"><strong>TASKS 4-5 — Antes dos Gateways</strong><br>Ligar via RDP ao CoreServicesVM → correr <code>ipconfig</code> → anotar IPv4.<br>No ManufacturingVM correr:<br><br><code>Test-NetConnection &lt;IP_CoreServicesVM&gt; -port 3389</code><br><br>Esperado: TcpTestSucceeded: <strong style="color:var(--red)">False</strong></div>
+  <div class="manual-block"><strong>TASKS 10-11 — Após Gateways + Conexões</strong><br>No ManufacturingVM correr:<br><br><code>Test-NetConnection &lt;IP_CoreServicesVM&gt; -port 3389</code><br><br>Esperado: TcpTestSucceeded: <strong style="color:var(--green)">True</strong></div>
+</div>
+
+<!-- M02 P3 GW -->
+<div id="m02p3-gw" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 3 · Tasks 6-7</div><div class="section-title">VPN Gateways</div><div class="section-desc">Cria os dois gateways — cada um demora até 45 minutos.</div></div>
+  <div class="note">⚠ Corre os dois sem esperar. Só avança para as Conexões quando ambos tiverem ProvisioningState = Succeeded.</div>
+  <div class="block"><div class="block-header"><span class="block-title">CoreServicesVnetGateway — East US <span class="badge badge-wait">45 min</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$pipGw1</span>    = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$GW1_PIP</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static <span class="k">-Zone</span> 1,2,3
+<span class="v">$vnet1</span>     = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET1_NAME</span>
+<span class="v">$gwSubnet1</span> = <span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="s">"GatewaySubnet"</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet1</span>
+<span class="v">$gwIp1</span>     = <span class="p">New-AzVirtualNetworkGatewayIpConfig</span> <span class="k">-Name</span> <span class="s">"gwIpConfig1"</span> <span class="k">-SubnetId</span> <span class="v">$gwSubnet1</span>.Id <span class="k">-PublicIpAddressId</span> <span class="v">$pipGw1</span>.Id
+<span class="p">New-AzVirtualNetworkGateway</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$GW1_NAME</span> <span class="k">-IpConfigurations</span> <span class="v">$gwIp1</span> <span class="k">-GatewayType</span> VPN <span class="k">-VpnType</span> RouteBased <span class="k">-GatewaySku</span> <span class="v">$GW_SKU</span> <span class="k">-VpnGatewayGeneration</span> <span class="v">$GW_GEN</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">ManufacturingVnetGateway — West Europe <span class="badge badge-wait">45 min</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$pipGw2</span>    = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$GW2_PIP</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static <span class="k">-Zone</span> 1,2,3
+<span class="v">$vnet2</span>     = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET2_NAME</span>
+<span class="v">$gwSubnet2</span> = <span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="s">"GatewaySubnet"</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet2</span>
+<span class="v">$gwIp2</span>     = <span class="p">New-AzVirtualNetworkGatewayIpConfig</span> <span class="k">-Name</span> <span class="s">"gwIpConfig2"</span> <span class="k">-SubnetId</span> <span class="v">$gwSubnet2</span>.Id <span class="k">-PublicIpAddressId</span> <span class="v">$pipGw2</span>.Id
+<span class="p">New-AzVirtualNetworkGateway</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$GW2_NAME</span> <span class="k">-IpConfigurations</span> <span class="v">$gwIp2</span> <span class="k">-GatewayType</span> VPN <span class="k">-VpnType</span> RouteBased <span class="k">-GatewaySku</span> <span class="v">$GW_SKU</span> <span class="k">-VpnGatewayGeneration</span> <span class="v">$GW_GEN</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">Verificar estado <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">Get-AzVirtualNetworkGateway</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$GW1_NAME</span> | <span class="p">Select-Object</span> Name, ProvisioningState
+<span class="p">Get-AzVirtualNetworkGateway</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$GW2_NAME</span> | <span class="p">Select-Object</span> Name, ProvisioningState</pre></div>
+</div>
+
+<!-- M02 P3 CONN -->
+<div id="m02p3-conn" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 3 · Tasks 8-9</div><div class="section-title">Conexões VPN</div></div>
+  <div class="note-red">⛔ Só correr depois de ambos os gateways estarem Succeeded!</div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzVirtualNetworkGatewayConnection <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$gw1Obj</span> = <span class="p">Get-AzVirtualNetworkGateway</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$GW1_NAME</span>
+<span class="v">$gw2Obj</span> = <span class="p">Get-AzVirtualNetworkGateway</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$GW2_NAME</span>
+<span class="p">New-AzVirtualNetworkGatewayConnection</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$CONN1_NAME</span> <span class="k">-ConnectionType</span> Vnet2Vnet <span class="k">-VirtualNetworkGateway1</span> <span class="v">$gw1Obj</span> <span class="k">-VirtualNetworkGateway2</span> <span class="v">$gw2Obj</span> <span class="k">-SharedKey</span> <span class="v">$SHARED_KEY</span> <span class="k">-EnableBgp</span> $false
+<span class="p">New-AzVirtualNetworkGatewayConnection</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_WESTEU</span> <span class="k">-Name</span> <span class="v">$CONN2_NAME</span> <span class="k">-ConnectionType</span> Vnet2Vnet <span class="k">-VirtualNetworkGateway1</span> <span class="v">$gw2Obj</span> <span class="k">-VirtualNetworkGateway2</span> <span class="v">$gw1Obj</span> <span class="k">-SharedKey</span> <span class="v">$SHARED_KEY</span> <span class="k">-EnableBgp</span> $false
+<span class="p">Get-AzVirtualNetworkGatewayConnection</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$CONN1_NAME</span> | <span class="p">Select-Object</span> Name, ConnectionStatus
+<span class="p">Get-AzVirtualNetworkGatewayConnection</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$CONN2_NAME</span> | <span class="p">Select-Object</span> Name, ConnectionStatus</pre></div>
+</div>
+
+<!-- M02 P7 WAN -->
+<div id="m02p7-wan" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 7 · Task 1</div><div class="section-title">Virtual WAN</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzVirtualWan <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">New-AzVirtualWan</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VWAN_NAME</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-VirtualWANType</span> Standard
+<span class="p">Get-AzVirtualWan</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VWAN_NAME</span> | <span class="p">Select-Object</span> Name, Location, ProvisioningState</pre></div>
+</div>
+
+<!-- M02 P7 HUB -->
+<div id="m02p7-hub" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 7 · Task 2</div><div class="section-title">Virtual Hub</div><div class="section-desc">Demora até 30 minutos.</div></div>
+  <div class="note">⚠ Só avança para ligar a VNet quando o Hub estiver Succeeded.</div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzVirtualHub <span class="badge badge-wait">30 min</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">New-AzVirtualHub</span> <span class="k">`
+  -ResourceGroupName</span> <span class="v">$RG</span> <span class="k">`
+  -Name</span> <span class="v">$HUB_NAME</span> <span class="k">`
+  -Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">`
+  -VirtualWan</span> (<span class="p">Get-AzVirtualWan</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VWAN_NAME</span>) <span class="k">`
+  -AddressPrefix</span> <span class="v">$HUB_PREFIX</span>
+<span class="p">Get-AzVirtualHub</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$HUB_NAME</span> | <span class="p">Select-Object</span> Name, ProvisioningState</pre></div>
+</div>
+
+<!-- M02 P7 CONN -->
+<div id="m02p7-conn" class="section">
+  <div class="section-header"><div class="section-tag">M02 · Part 7 · Task 3</div><div class="section-title">Ligar ResearchVnet ao Hub</div></div>
+  <div class="note-red">⛔ Só correr depois do Hub estar Succeeded!</div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzVirtualHubVnetConnection <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$res</span>   = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$VNET3_SUB1_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET3_SUB1</span>
+<span class="p">New-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Location</span> <span class="v">$LOCATION_EASTUS</span> <span class="k">-Name</span> <span class="v">$VNET3_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET3_PREFIX</span> <span class="k">-Subnet</span> <span class="v">$res</span>
+<span class="v">$vnet3</span> = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-Name</span> <span class="v">$VNET3_NAME</span>
+<span class="p">New-AzVirtualHubVnetConnection</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-VirtualHubName</span> <span class="v">$HUB_NAME</span> <span class="k">-Name</span> <span class="v">$VWAN_CONN</span> <span class="k">-RemoteVirtualNetwork</span> <span class="v">$vnet3</span>
+<span class="p">Get-AzVirtualHubVnetConnection</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG</span> <span class="k">-VirtualHubName</span> <span class="v">$HUB_NAME</span> <span class="k">-Name</span> <span class="v">$VWAN_CONN</span> | <span class="p">Select-Object</span> Name, ProvisioningState</pre></div>
+</div>
+
+<!-- M03 P4 VNET -->
+<div id="m03p4-vnet" class="section">
+  <div class="section-header"><div class="section-tag">M03 · Part 4 · Task 1</div><div class="section-title">VNet + GatewaySubnet</div><div class="section-desc">Cria a CoreServicesVNet com GatewaySubnet para o ExpressRoute Gateway.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">Resource Group + VNet <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">New-AzResourceGroup</span> <span class="k">-Name</span> <span class="v">$RG_CORE</span> <span class="k">-Location</span> <span class="v">$LOCATION</span>
+<span class="v">$gwSub</span> = <span class="p">New-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$GW_SUB_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$GW_SUB</span>
+<span class="p">New-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_CORE</span> <span class="k">-Location</span> <span class="v">$LOCATION</span> <span class="k">-Name</span> <span class="v">$VNET_NAME</span> <span class="k">-AddressPrefix</span> <span class="v">$VNET_PREFIX</span> <span class="k">-Subnet</span> <span class="v">$gwSub</span>
+<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_CORE</span> <span class="k">-Name</span> <span class="v">$VNET_NAME</span> | <span class="p">Select-Object</span> Name, Location, AddressSpace
+<span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-VirtualNetwork</span> (<span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_CORE</span> <span class="k">-Name</span> <span class="v">$VNET_NAME</span>) | <span class="p">Select-Object</span> Name, AddressPrefix</pre></div>
+</div>
+
+<!-- M03 P4 GW -->
+<div id="m03p4-gw" class="section">
+  <div class="section-header"><div class="section-tag">M03 · Part 4 · Task 2</div><div class="section-title">ExpressRoute Gateway</div><div class="section-desc">GatewayType ExpressRoute — diferente do VPN Gateway do M02. SKU Standard.</div></div>
+  <div class="note">⚠ Demora até 45 minutos.</div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzVirtualNetworkGateway — ExpressRoute <span class="badge badge-wait">45 min</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$pipGw</span> = <span class="p">New-AzPublicIpAddress</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_CORE</span> <span class="k">-Location</span> <span class="v">$LOCATION</span> <span class="k">-Name</span> <span class="v">$GW_PIP</span> <span class="k">-Sku</span> Standard <span class="k">-AllocationMethod</span> Static
+<span class="v">$vnet</span>  = <span class="p">Get-AzVirtualNetwork</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_CORE</span> <span class="k">-Name</span> <span class="v">$VNET_NAME</span>
+<span class="v">$gwSub</span> = <span class="p">Get-AzVirtualNetworkSubnetConfig</span> <span class="k">-Name</span> <span class="v">$GW_SUB_NAME</span> <span class="k">-VirtualNetwork</span> <span class="v">$vnet</span>
+<span class="v">$gwIp</span>  = <span class="p">New-AzVirtualNetworkGatewayIpConfig</span> <span class="k">-Name</span> <span class="s">"gwIpConfig"</span> <span class="k">-SubnetId</span> <span class="v">$gwSub</span>.Id <span class="k">-PublicIpAddressId</span> <span class="v">$pipGw</span>.Id
+<span class="p">New-AzVirtualNetworkGateway</span> <span class="k">`
+  -ResourceGroupName</span> <span class="v">$RG_CORE</span> <span class="k">`
+  -Location</span> <span class="v">$LOCATION</span> <span class="k">`
+  -Name</span> <span class="v">$GW_NAME</span> <span class="k">`
+  -IpConfigurations</span> <span class="v">$gwIp</span> <span class="k">`
+  -GatewayType</span> ExpressRoute <span class="k">`
+  -GatewaySku</span> <span class="v">$GW_SKU</span>
+<span class="p">Get-AzVirtualNetworkGateway</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_CORE</span> <span class="k">-Name</span> <span class="v">$GW_NAME</span> | <span class="p">Select-Object</span> Name, GatewayType, ProvisioningState</pre></div>
+</div>
+
+<!-- M03 P5 CIRCUIT -->
+<div id="m03p5-circuit" class="section">
+  <div class="section-header"><div class="section-tag">M03 · Part 5 · Task 1</div><div class="section-title">ExpressRoute Circuit</div><div class="section-desc">Cria o circuit no resource group ExpressRouteResourceGroup.</div></div>
+  <div class="note-red">⚠ O circuit começa a ser faturado assim que o Service Key é emitido!</div>
+  <div class="block"><div class="block-header"><span class="block-title">New-AzExpressRouteCircuit <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">New-AzResourceGroup</span> <span class="k">-Name</span> <span class="v">$RG_ER</span> <span class="k">-Location</span> <span class="v">$LOCATION2</span>
+<span class="p">New-AzExpressRouteCircuit</span> <span class="k">`
+  -ResourceGroupName</span> <span class="v">$RG_ER</span> <span class="k">`
+  -Location</span> <span class="v">$ER_LOCATION</span> <span class="k">`
+  -Name</span> <span class="v">$ER_NAME</span> <span class="k">`
+  -SkuFamily</span> <span class="v">$ER_BILLING</span> <span class="k">`
+  -SkuTier</span> <span class="v">$ER_SKU</span> <span class="k">`
+  -ServiceProviderName</span> <span class="v">$ER_PROVIDER</span> <span class="k">`
+  -PeeringLocation</span> <span class="v">$ER_PEERING</span> <span class="k">`
+  -BandwidthInMbps</span> <span class="v">$ER_BW</span></pre></div>
+</div>
+
+<!-- M03 P5 KEY -->
+<div id="m03p5-key" class="section">
+  <div class="section-header"><div class="section-tag">M03 · Part 5 · Task 2</div><div class="section-title">Service Key</div><div class="section-desc">O Service Key é o que envias ao connectivity provider para provisionar o circuit.</div></div>
+  <div class="block"><div class="block-header"><span class="block-title">Get-AzExpressRouteCircuit <span class="badge badge-auto">auto</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="v">$circuit</span> = <span class="p">Get-AzExpressRouteCircuit</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_ER</span> <span class="k">-Name</span> <span class="v">$ER_NAME</span>
+<span class="p">Write-Host</span> <span class="s">"Service Key: $($circuit.ServiceKey)"</span>
+<span class="p">Write-Host</span> <span class="s">"Provider Status: $($circuit.ServiceProviderProvisioningState)"</span>
+<span class="p">Write-Host</span> <span class="s">"Circuit Status: $($circuit.CircuitProvisioningState)"</span></pre></div>
+</div>
+
+<!-- M03 P5 DEPROV -->
+<div id="m03p5-deprov" class="section">
+  <div class="section-header"><div class="section-tag">M03 · Part 5 · Task 3</div><div class="section-title">Deprovision + Cleanup</div></div>
+  <div class="note-red">⛔ Só eliminar depois do provider ter ProviderStatus = NotProvisioned. Antes disso continuas a ser faturado!</div>
+  <div class="block"><div class="block-header"><span class="block-title">Remove-AzExpressRouteCircuit <span class="badge badge-manual">cuidado</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">Remove-AzExpressRouteCircuit</span> <span class="k">-ResourceGroupName</span> <span class="v">$RG_ER</span> <span class="k">-Name</span> <span class="v">$ER_NAME</span> <span class="k">-Force</span></pre></div>
+  <div class="block"><div class="block-header"><span class="block-title">Cleanup — eliminar Resource Groups <span class="badge badge-manual">cuidado</span></span><button class="copy-btn" onclick="copy(this)">copiar</button></div>
+  <pre><span class="p">Remove-AzResourceGroup</span> <span class="k">-Name</span> <span class="v">$RG_CORE</span> <span class="k">-Force -AsJob</span>
+<span class="p">Remove-AzResourceGroup</span> <span class="k">-Name</span> <span class="v">$RG_ER</span>   <span class="k">-Force -AsJob</span></pre></div>
+</div>
+
+</main>
+<script>
+function show(id,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById(id).classList.add('active');if(btn)btn.classList.add('active');}
+function copy(btn){const pre=btn.closest('.block').querySelector('pre');navigator.clipboard.writeText(pre.innerText).then(()=>{btn.textContent='copiado ✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent='copiar';btn.classList.remove('ok');},2000);});}
+</script>
+</body>
+</html>
