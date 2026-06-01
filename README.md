@@ -9,14 +9,14 @@ Always run the **Variables** block first in each session.
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| [M01](./M01/README.md) | Virtual Networks, DNS & Peering | ✅ Tested |
-| [M02](./M02/README.md) | VPN Gateway & Virtual WAN | 🧪 Under Test |
-| [M03](./M03/README.md) | ExpressRoute | ⏸ On Hold |
-| [M04](./M04/README.md) | Load Balancer & Traffic Manager | ⏸ On Hold |
-| [M05](./M05/README.md) | Application Gateway & Front Door | ⏸ On Hold |
-| [M06](./M06/README.md) | DDoS, Firewall & Firewall Manager | ⏸ On Hold |
-| [M07](./M07/README.md) | Service Endpoints & Private Endpoint | ⏸ On Hold |
-| [M08](./M08/README.md) | Monitor Load Balancer | ⏸ On Hold |
+| [M01](./M01) | Virtual Networks, DNS & Peering | ✅ Tested |
+| [M02](./M02) | VPN Gateway & Virtual WAN | 🧪 Under Test |
+| [M03](./M03) | ExpressRoute | ⏸ On Hold |
+| [M04](./M04) | Load Balancer & Traffic Manager | ⏸ On Hold |
+| [M05](./M05) | Application Gateway & Front Door | ⏸ On Hold |
+| [M06](./M06) | DDoS, Firewall & Firewall Manager | ⏸ On Hold |
+| [M07](./M07) | Service Endpoints & Private Endpoint | ⏸ On Hold |
+| [M08](./M08) | Monitor Load Balancer | ⏸ On Hold |
 
 ---
 
