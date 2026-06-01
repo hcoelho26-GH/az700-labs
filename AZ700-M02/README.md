@@ -49,8 +49,35 @@ $HUB_PREFIX = "10.60.0.0/24"      ; $VWAN_CONN = "ContosoVirtualWAN-to-ResearchV
 
 ## Part 3 — VPN Gateway
 
+### Task 1 — Create VNets
+
+> ⚠️ **LearnOnDemand**: use the ARM template below. PowerShell works in unrestricted environments.
+
 <details>
-<summary>Task 1 — Create VNets</summary>
+<summary>ARM Template — LearnOnDemand (recommended)</summary>
+
+Upload `azuredeploy.json` and `azuredeploy.parameters.json` to Cloud Shell, then run:
+
+```powershell
+New-AzResourceGroup -Name $RG -Location $LOCATION_EASTUS
+
+New-AzResourceGroupDeployment `
+  -ResourceGroupName $RG `
+  -TemplateFile azuredeploy.json `
+  -TemplateParameterFile azuredeploy.parameters.json
+```
+
+> Note: The ARM template does not create GatewaySubnet on ManufacturingVnet. Add it manually after deployment:
+
+```powershell
+$vnet2 = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET2_NAME
+Add-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $vnet2 -AddressPrefix $VNET2_GW | Set-AzVirtualNetwork
+```
+
+</details>
+
+<details>
+<summary>PowerShell — unrestricted environments</summary>
 
 ```powershell
 New-AzResourceGroup -Name $RG -Location $LOCATION_EASTUS
@@ -72,8 +99,44 @@ Get-AzVirtualNetwork -ResourceGroupName $RG | Select-Object Name, Location
 
 </details>
 
+---
+
+### Tasks 2-3 — CoreServicesVM + ManufacturingVM
+
+> ⚠️ **LearnOnDemand**: use the ARM templates below. PowerShell is blocked for VM creation in restricted subscriptions.
+
 <details>
-<summary>Tasks 2-3 — CoreServicesVM + ManufacturingVM</summary>
+<summary>ARM Template — CoreServicesVM (LearnOnDemand)</summary>
+
+Upload `CoreServicesVMazuredeploy.json` and `CoreServicesVMazuredeploy.parameters.json` to Cloud Shell, then run:
+
+```powershell
+New-AzResourceGroupDeployment `
+  -ResourceGroupName $RG `
+  -TemplateFile CoreServicesVMazuredeploy.json `
+  -TemplateParameterFile CoreServicesVMazuredeploy.parameters.json `
+  -adminPassword (Read-Host "CoreServicesVM Password" -AsSecureString)
+```
+
+</details>
+
+<details>
+<summary>ARM Template — ManufacturingVM (LearnOnDemand)</summary>
+
+Upload `ManufacturingVMazuredeploy.json` and `ManufacturingVMazuredeploy.parameters.json` to Cloud Shell, then run:
+
+```powershell
+New-AzResourceGroupDeployment `
+  -ResourceGroupName $RG `
+  -TemplateFile ManufacturingVMazuredeploy.json `
+  -TemplateParameterFile ManufacturingVMazuredeploy.parameters.json `
+  -adminPassword (Read-Host "ManufacturingVM Password" -AsSecureString)
+```
+
+</details>
+
+<details>
+<summary>PowerShell — unrestricted environments</summary>
 
 ```powershell
 $adminPassword = Read-Host "VM Password" -AsSecureString
@@ -103,8 +166,12 @@ Get-AzVM -ResourceGroupName $RG | Select-Object Name, Location
 
 **Tasks 4-5 — Manual**: RDP to CoreServicesVM → `ipconfig` → note IPv4. RDP to ManufacturingVM → `Test-NetConnection <IP> -port 3389` → expected: `False`
 
+---
+
+### Tasks 6-7 — VPN Gateways ⏱️ 45 min each
+
 <details>
-<summary>Tasks 6-7 — VPN Gateways ⏱️ 45 min each</summary>
+<summary>Show code</summary>
 
 ```powershell
 # Run both without waiting between them
@@ -127,8 +194,12 @@ Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW2_NAME | Select-Obje
 
 </details>
 
+---
+
+### Tasks 8-9 — VPN Connections ⛔ only after both gateways show Succeeded
+
 <details>
-<summary>Tasks 8-9 — VPN Connections ⛔ only after both gateways show Succeeded</summary>
+<summary>Show code</summary>
 
 ```powershell
 $gw1Obj = Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW1_NAME
