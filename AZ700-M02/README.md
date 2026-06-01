@@ -174,20 +174,24 @@ Get-AzVM -ResourceGroupName $RG | Select-Object Name, Location
 <summary>Show code</summary>
 
 ```powershell
-# Run both without waiting between them
+# CoreServicesVnetGateway — East US
 $pipGw1    = New-AzPublicIpAddress -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $GW1_PIP -Sku Standard -AllocationMethod Static -Zone 1,2,3
 $vnet1     = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME
 $gwSubnet1 = Get-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $vnet1
 $gwIp1     = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig1" -SubnetId $gwSubnet1.Id -PublicIpAddressId $pipGw1.Id
-New-AzVirtualNetworkGateway -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $GW1_NAME -IpConfigurations $gwIp1 -GatewayType VPN -VpnType RouteBased -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN
+New-AzVirtualNetworkGateway -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $GW1_NAME -IpConfigurations $gwIp1 -GatewayType VPN -VpnType RouteBased -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN -AsJob
 
+# ManufacturingVnetGateway — West Europe (run immediately, do not wait)
 $pipGw2    = New-AzPublicIpAddress -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $GW2_PIP -Sku Standard -AllocationMethod Static -Zone 1,2,3
 $vnet2     = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET2_NAME
 $gwSubnet2 = Get-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $vnet2
 $gwIp2     = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig2" -SubnetId $gwSubnet2.Id -PublicIpAddressId $pipGw2.Id
-New-AzVirtualNetworkGateway -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $GW2_NAME -IpConfigurations $gwIp2 -GatewayType VPN -VpnType RouteBased -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN
+New-AzVirtualNetworkGateway -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $GW2_NAME -IpConfigurations $gwIp2 -GatewayType VPN -VpnType RouteBased -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN -AsJob
 
-# Check status — wait for Succeeded on both
+# Check job status
+Get-Job
+
+# Check gateway status — run periodically until both show Succeeded
 Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW1_NAME | Select-Object Name, ProvisioningState
 Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW2_NAME | Select-Object Name, ProvisioningState
 ```

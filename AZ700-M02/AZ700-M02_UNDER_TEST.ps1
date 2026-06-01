@@ -5,14 +5,12 @@ $RG              = "ContosoResourceGroup"
 $LOCATION_EASTUS = "eastus"
 $LOCATION_WESTEU = "westeurope"
 
-# CoreServicesVnet
 $VNET1_NAME      = "CoreServicesVnet"       ; $VNET1_PREFIX    = "10.20.0.0/16"
 $VNET1_GW_NAME   = "GatewaySubnet"          ; $VNET1_GW        = "10.20.0.0/27"
 $VNET1_SUB1_NAME = "DatabaseSubnet"         ; $VNET1_SUB1      = "10.20.20.0/24"
 $VNET1_SUB2_NAME = "SharedServicesSubnet"   ; $VNET1_SUB2      = "10.20.10.0/24"
 $VNET1_SUB3_NAME = "PublicWebServiceSubnet" ; $VNET1_SUB3      = "10.20.30.0/24"
 
-# ManufacturingVnet
 $VNET2_NAME      = "ManufacturingVnet"          ; $VNET2_PREFIX    = "10.30.0.0/16"
 $VNET2_GW_NAME   = "GatewaySubnet"              ; $VNET2_GW        = "10.30.0.0/27"
 $VNET2_SUB1_NAME = "ManufacturingSystemSubnet"  ; $VNET2_SUB1      = "10.30.10.0/24"
@@ -20,27 +18,22 @@ $VNET2_SUB2_NAME = "SensorSubnet1"              ; $VNET2_SUB2      = "10.30.20.0
 $VNET2_SUB3_NAME = "SensorSubnet2"              ; $VNET2_SUB3      = "10.30.21.0/24"
 $VNET2_SUB4_NAME = "SensorSubnet3"              ; $VNET2_SUB4      = "10.30.22.0/24"
 
-# ResearchVnet (Part 7)
 $VNET3_NAME      = "ResearchVnet"         ; $VNET3_PREFIX    = "10.40.0.0/16"
 $VNET3_SUB1_NAME = "ResearchSystemSubnet" ; $VNET3_SUB1      = "10.40.0.0/24"
 
-# VPN Gateways
 $GW1_NAME = "CoreServicesVnetGateway"  ; $GW1_PIP = "CoreServicesVnetGateway-ip"
 $GW2_NAME = "ManufacturingVnetGateway" ; $GW2_PIP = "ManufacturingVnetGateway-ip"
 $GW_SKU   = "VpnGw1AZ"                 ; $GW_GEN  = "Generation1"
 
-# VPN Connections
 $CONN1_NAME = "CoreServicesGW-to-ManufacturingGW"
 $CONN2_NAME = "ManufacturingGW-to-CoreServicesGW"
 $SHARED_KEY = "abc123"
 
-# VMs Part 3
 $VM1_NAME = "CoreServicesVM"  ; $VM1_NIC = "CoreServicesVM-nic"  ; $VM1_NSG = "CoreServicesVM-nsg"  ; $VM1_PIP = "CoreServicesVM-pip"
 $VM2_NAME = "ManufacturingVM" ; $VM2_NIC = "ManufacturingVM-nic" ; $VM2_NSG = "ManufacturingVM-nsg" ; $VM2_PIP = "ManufacturingVM-pip"
 $VM_SIZE    = "Standard_D2s_v3"
 $ADMIN_USER = "TestUser"
 
-# Virtual WAN (Part 7) — same RG as $RG
 $VWAN_NAME  = "ContosoVirtualWAN" ; $HUB_NAME  = "ContosoHub"
 $HUB_PREFIX = "10.60.0.0/24"      ; $VWAN_CONN = "ContosoVirtualWAN-to-ResearchVNet"
 
@@ -48,11 +41,11 @@ $HUB_PREFIX = "10.60.0.0/24"      ; $VWAN_CONN = "ContosoVirtualWAN-to-ResearchV
 ## AZ-700 M02 - Resources ##
 
 
-# Unit 3 - Task 1 - Create VNets and Resource Group
+# Unit 3 - Task 1 - Create VNets
+# NOTE: In LearnOnDemand use ARM template instead (see README)
 
 New-AzResourceGroup -Name $RG -Location $LOCATION_EASTUS
 
-# CoreServicesVnet - East US
 $gw1 = New-AzVirtualNetworkSubnetConfig -Name $VNET1_GW_NAME   -AddressPrefix $VNET1_GW
 $db  = New-AzVirtualNetworkSubnetConfig -Name $VNET1_SUB1_NAME -AddressPrefix $VNET1_SUB1
 $ss  = New-AzVirtualNetworkSubnetConfig -Name $VNET1_SUB2_NAME -AddressPrefix $VNET1_SUB2
@@ -63,7 +56,6 @@ New-AzVirtualNetwork `
   -Name $VNET1_NAME -AddressPrefix $VNET1_PREFIX `
   -Subnet $gw1, $db, $ss, $web
 
-# ManufacturingVnet - West Europe
 $gw2  = New-AzVirtualNetworkSubnetConfig -Name $VNET2_GW_NAME   -AddressPrefix $VNET2_GW
 $mfg  = New-AzVirtualNetworkSubnetConfig -Name $VNET2_SUB1_NAME -AddressPrefix $VNET2_SUB1
 $sen1 = New-AzVirtualNetworkSubnetConfig -Name $VNET2_SUB2_NAME -AddressPrefix $VNET2_SUB2
@@ -79,6 +71,7 @@ Get-AzVirtualNetwork -ResourceGroupName $RG | Select-Object Name, Location
 
 
 # Unit 3 - Task 2 - CoreServicesVM
+# NOTE: In LearnOnDemand use ARM template instead (see README)
 
 $adminPassword = Read-Host "VM Password" -AsSecureString
 $credential    = New-Object System.Management.Automation.PSCredential($ADMIN_USER, $adminPassword)
@@ -100,6 +93,7 @@ New-AzVM -ResourceGroupName $RG -Location $LOCATION_EASTUS -VM $vm1Config
 
 
 # Unit 3 - Task 3 - ManufacturingVM
+# NOTE: In LearnOnDemand use ARM template instead (see README)
 
 $vnet2     = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET2_NAME
 $subnetId2 = (Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet2 -Name $VNET2_SUB1_NAME).Id
@@ -127,35 +121,40 @@ Get-AzVM -ResourceGroupName $RG | Select-Object Name, Location
 
 
 # Unit 3 - Task 6 - CoreServicesVnet Gateway
-# NOTE: takes up to 45 minutes — proceed to Task 7 while waiting
+# NOTE: takes up to 45 minutes — use -AsJob to run both in parallel
 
 $pipGw1    = New-AzPublicIpAddress -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $GW1_PIP -Sku Standard -AllocationMethod Static -Zone 1,2,3
 $vnet1     = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET1_NAME
 $gwSubnet1 = Get-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $vnet1
-
-$gwIpConfig1 = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig1" -SubnetId $gwSubnet1.Id -PublicIpAddressId $pipGw1.Id
+$gwIp1     = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig1" -SubnetId $gwSubnet1.Id -PublicIpAddressId $pipGw1.Id
 
 New-AzVirtualNetworkGateway `
   -ResourceGroupName $RG -Location $LOCATION_EASTUS `
-  -Name $GW1_NAME -IpConfigurations $gwIpConfig1 `
+  -Name $GW1_NAME -IpConfigurations $gwIp1 `
   -GatewayType VPN -VpnType RouteBased `
-  -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN
+  -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN -AsJob
 
 
 # Unit 3 - Task 7 - ManufacturingVnet Gateway
-# NOTE: takes up to 45 minutes — proceed while waiting
+# Run immediately after Task 6 — do not wait
 
 $pipGw2    = New-AzPublicIpAddress -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $GW2_PIP -Sku Standard -AllocationMethod Static -Zone 1,2,3
 $vnet2     = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET2_NAME
 $gwSubnet2 = Get-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $vnet2
-
-$gwIpConfig2 = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig2" -SubnetId $gwSubnet2.Id -PublicIpAddressId $pipGw2.Id
+$gwIp2     = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig2" -SubnetId $gwSubnet2.Id -PublicIpAddressId $pipGw2.Id
 
 New-AzVirtualNetworkGateway `
   -ResourceGroupName $RG -Location $LOCATION_WESTEU `
-  -Name $GW2_NAME -IpConfigurations $gwIpConfig2 `
+  -Name $GW2_NAME -IpConfigurations $gwIp2 `
   -GatewayType VPN -VpnType RouteBased `
-  -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN
+  -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN -AsJob
+
+# Check job status
+Get-Job
+
+# Check gateway status — run periodically until both show Succeeded
+Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW1_NAME | Select-Object Name, ProvisioningState
+Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW2_NAME | Select-Object Name, ProvisioningState
 
 
 # Unit 3 - Task 8 - Connect both Gateways
