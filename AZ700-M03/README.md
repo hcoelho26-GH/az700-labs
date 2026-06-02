@@ -37,9 +37,17 @@ $ER_BILLING  = "MeteredData"
 
 ```powershell
 New-AzResourceGroup -Name $RG_CORE -Location $LOCATION
+
 $gwSub = New-AzVirtualNetworkSubnetConfig -Name $GW_SUB_NAME -AddressPrefix $GW_SUB
-New-AzVirtualNetwork -ResourceGroupName $RG_CORE -Location $LOCATION -Name $VNET_NAME -AddressPrefix $VNET_PREFIX -Subnet $gwSub
-Get-AzVirtualNetworkSubnetConfig -VirtualNetwork (Get-AzVirtualNetwork -ResourceGroupName $RG_CORE -Name $VNET_NAME) | Select-Object Name, AddressPrefix
+
+New-AzVirtualNetwork `
+  -ResourceGroupName $RG_CORE -Location $LOCATION `
+  -Name $VNET_NAME -AddressPrefix $VNET_PREFIX `
+  -Subnet $gwSub
+
+Get-AzVirtualNetworkSubnetConfig `
+  -VirtualNetwork (Get-AzVirtualNetwork -ResourceGroupName $RG_CORE -Name $VNET_NAME) |
+  Select-Object Name, AddressPrefix
 ```
 
 </details>
@@ -47,12 +55,25 @@ Get-AzVirtualNetworkSubnetConfig -VirtualNetwork (Get-AzVirtualNetwork -Resource
 <details>
 <summary>Task 2 — ExpressRoute Gateway ⏱️ 45 min</summary>
 
+> GatewayType `ExpressRoute` — different from the VPN Gateway in M02.
+
 ```powershell
-$pipGw = New-AzPublicIpAddress -ResourceGroupName $RG_CORE -Location $LOCATION -Name $GW_PIP -Sku Standard -AllocationMethod Static
+$pipGw = New-AzPublicIpAddress `
+  -ResourceGroupName $RG_CORE -Location $LOCATION `
+  -Name $GW_PIP -Sku Standard -AllocationMethod Static
+
 $vnet  = Get-AzVirtualNetwork -ResourceGroupName $RG_CORE -Name $VNET_NAME
 $gwSub = Get-AzVirtualNetworkSubnetConfig -Name $GW_SUB_NAME -VirtualNetwork $vnet
 $gwIp  = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig" -SubnetId $gwSub.Id -PublicIpAddressId $pipGw.Id
-New-AzVirtualNetworkGateway -ResourceGroupName $RG_CORE -Location $LOCATION -Name $GW_NAME -IpConfigurations $gwIp -GatewayType ExpressRoute -GatewaySku $GW_SKU
+
+New-AzVirtualNetworkGateway `
+  -ResourceGroupName $RG_CORE -Location $LOCATION `
+  -Name $GW_NAME -IpConfigurations $gwIp `
+  -GatewayType ExpressRoute -GatewaySku $GW_SKU -AsJob
+
+Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
+
+# Check status periodically until Succeeded
 Get-AzVirtualNetworkGateway -ResourceGroupName $RG_CORE -Name $GW_NAME | Select-Object Name, GatewayType, ProvisioningState
 ```
 
@@ -67,7 +88,13 @@ Get-AzVirtualNetworkGateway -ResourceGroupName $RG_CORE -Name $GW_NAME | Select-
 
 ```powershell
 New-AzResourceGroup -Name $RG_ER -Location $LOCATION2
-New-AzExpressRouteCircuit -ResourceGroupName $RG_ER -Location $ER_LOCATION -Name $ER_NAME -SkuFamily $ER_BILLING -SkuTier $ER_SKU -ServiceProviderName $ER_PROVIDER -PeeringLocation $ER_PEERING -BandwidthInMbps $ER_BW
+
+New-AzExpressRouteCircuit `
+  -ResourceGroupName $RG_ER -Location $ER_LOCATION `
+  -Name $ER_NAME -SkuFamily $ER_BILLING -SkuTier $ER_SKU `
+  -ServiceProviderName $ER_PROVIDER `
+  -PeeringLocation $ER_PEERING `
+  -BandwidthInMbps $ER_BW
 ```
 
 </details>
@@ -87,10 +114,15 @@ Write-Host "Circuit Status: $($circuit.CircuitProvisioningState)"
 <details>
 <summary>Task 3 — Deprovision ⛔ only after ProviderStatus = NotProvisioned</summary>
 
+> Billing continues until the provider deprovisions the circuit. Do not delete before `ProviderStatus = NotProvisioned`.
+
 ```powershell
 Remove-AzExpressRouteCircuit -ResourceGroupName $RG_ER -Name $ER_NAME -Force
+
 Remove-AzResourceGroup -Name $RG_CORE -Force -AsJob
 Remove-AzResourceGroup -Name $RG_ER   -Force -AsJob
+
+Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 ```
 
 </details>
