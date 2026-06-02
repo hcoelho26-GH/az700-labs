@@ -6,10 +6,16 @@
 <summary>Show variables</summary>
 
 ```powershell
-$RG_CORE   = "ContosoResourceGroup"
-$RG_ER     = "ExpressRouteResourceGroup"
-$LOCATION  = "eastus"
-$LOCATION2 = "eastus2"
+# LearnOnDemand: RGs are pre-created — update the suffix to match your lab number
+$RG_CORE  = "ContosoResourceGrouplod<LABID>"
+$RG_ER    = "ExpressRouteResourceGrouplod<LABID>"
+$LOCATION = "eastus2"   # LearnOnDemand uses eastus2 — change if needed
+
+# Unrestricted environments
+# $RG_CORE   = "ContosoResourceGroup"
+# $RG_ER     = "ExpressRouteResourceGroup"
+# $LOCATION  = "eastus"
+# $LOCATION2 = "eastus2"
 
 $VNET_NAME   = "CoreServicesVNet"           ; $VNET_PREFIX = "10.20.0.0/16"
 $GW_SUB_NAME = "GatewaySubnet"              ; $GW_SUB      = "10.20.0.0/27"
@@ -17,7 +23,8 @@ $GW_NAME     = "CoreServicesVnetGateway"
 $GW_PIP      = "CoreServicesVnetGateway-ip"
 $GW_SKU      = "Standard"
 
-$ER_NAME     = "TestERCircuit"
+# LearnOnDemand: circuit name includes the lab number suffix
+$ER_NAME     = "TestERCircuit<LABID>"
 $ER_LOCATION = "eastus2"
 $ER_PEERING  = "Seattle"
 $ER_PROVIDER = "Equinix"
@@ -32,8 +39,30 @@ $ER_BILLING  = "MeteredData"
 
 ## Part 4 — ExpressRoute Gateway
 
+### Task 1 — VNet + GatewaySubnet
+
+> ⚠️ **LearnOnDemand**: RGs are pre-created — skip `New-AzResourceGroup`. No VNets are pre-created, so create it directly.
+
 <details>
-<summary>Task 1 — VNet + GatewaySubnet</summary>
+<summary>LearnOnDemand</summary>
+
+```powershell
+$gwSub = New-AzVirtualNetworkSubnetConfig -Name $GW_SUB_NAME -AddressPrefix $GW_SUB
+
+New-AzVirtualNetwork `
+  -ResourceGroupName $RG_CORE -Location $LOCATION `
+  -Name $VNET_NAME -AddressPrefix $VNET_PREFIX `
+  -Subnet $gwSub
+
+Get-AzVirtualNetworkSubnetConfig `
+  -VirtualNetwork (Get-AzVirtualNetwork -ResourceGroupName $RG_CORE -Name $VNET_NAME) |
+  Select-Object Name, AddressPrefix
+```
+
+</details>
+
+<details>
+<summary>Unrestricted environments</summary>
 
 ```powershell
 New-AzResourceGroup -Name $RG_CORE -Location $LOCATION
@@ -52,10 +81,14 @@ Get-AzVirtualNetworkSubnetConfig `
 
 </details>
 
-<details>
-<summary>Task 2 — ExpressRoute Gateway ⏱️ 45 min</summary>
+---
+
+### Task 2 — ExpressRoute Gateway ⏱️ 45 min
 
 > GatewayType `ExpressRoute` — different from the VPN Gateway in M02.
+
+<details>
+<summary>Show code</summary>
 
 ```powershell
 $pipGw = New-AzPublicIpAddress `
@@ -83,8 +116,27 @@ Get-AzVirtualNetworkGateway -ResourceGroupName $RG_CORE -Name $GW_NAME | Select-
 
 ## Part 5 — ExpressRoute Circuit
 
+### Task 1 — Create Circuit ⚠️ billing starts immediately
+
+> ⚠️ **LearnOnDemand**: `New-AzResourceGroup` is blocked — skip it. RG is pre-created.  
+> Circuit name includes the lab number suffix — update `$ER_NAME` before running.
+
 <details>
-<summary>Task 1 — Create Circuit ⚠️ billing starts immediately</summary>
+<summary>LearnOnDemand</summary>
+
+```powershell
+New-AzExpressRouteCircuit `
+  -ResourceGroupName $RG_ER -Location $LOCATION `
+  -Name $ER_NAME -SkuFamily $ER_BILLING -SkuTier $ER_SKU `
+  -ServiceProviderName $ER_PROVIDER `
+  -PeeringLocation $ER_PEERING `
+  -BandwidthInMbps $ER_BW
+```
+
+</details>
+
+<details>
+<summary>Unrestricted environments</summary>
 
 ```powershell
 New-AzResourceGroup -Name $RG_ER -Location $LOCATION2
@@ -99,8 +151,12 @@ New-AzExpressRouteCircuit `
 
 </details>
 
+---
+
+### Task 2 — Get Service Key
+
 <details>
-<summary>Task 2 — Get Service Key</summary>
+<summary>Show code</summary>
 
 ```powershell
 $circuit = Get-AzExpressRouteCircuit -ResourceGroupName $RG_ER -Name $ER_NAME
@@ -111,16 +167,21 @@ Write-Host "Circuit Status: $($circuit.CircuitProvisioningState)"
 
 </details>
 
-<details>
-<summary>Task 3 — Deprovision ⛔ only after ProviderStatus = NotProvisioned</summary>
+---
+
+### Task 3 — Deprovision ⛔ only after ProviderStatus = NotProvisioned
 
 > Billing continues until the provider deprovisions the circuit. Do not delete before `ProviderStatus = NotProvisioned`.
+
+<details>
+<summary>Show code</summary>
 
 ```powershell
 Remove-AzExpressRouteCircuit -ResourceGroupName $RG_ER -Name $ER_NAME -Force
 
-Remove-AzResourceGroup -Name $RG_CORE -Force -AsJob
-Remove-AzResourceGroup -Name $RG_ER   -Force -AsJob
+# Unrestricted only — LearnOnDemand RGs cannot be deleted
+# Remove-AzResourceGroup -Name $RG_CORE -Force -AsJob
+# Remove-AzResourceGroup -Name $RG_ER   -Force -AsJob
 
 Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 ```
