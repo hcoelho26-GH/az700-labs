@@ -113,9 +113,11 @@ Upload `CoreServicesVMazuredeploy.json` and `CoreServicesVMazuredeploy.parameter
 ```powershell
 New-AzResourceGroupDeployment `
   -ResourceGroupName $RG `
+  -Name "deploy-coreservicesvm" `
   -TemplateFile CoreServicesVMazuredeploy.json `
   -TemplateParameterFile CoreServicesVMazuredeploy.parameters.json `
-  -adminPassword (Read-Host "CoreServicesVM Password" -AsSecureString)
+  -adminPassword (Read-Host "CoreServicesVM Password" -AsSecureString) `
+  -AsJob
 ```
 
 </details>
@@ -128,9 +130,24 @@ Upload `ManufacturingVMazuredeploy.json` and `ManufacturingVMazuredeploy.paramet
 ```powershell
 New-AzResourceGroupDeployment `
   -ResourceGroupName $RG `
+  -Name "deploy-manufacturingvm" `
   -TemplateFile ManufacturingVMazuredeploy.json `
   -TemplateParameterFile ManufacturingVMazuredeploy.parameters.json `
-  -adminPassword (Read-Host "ManufacturingVM Password" -AsSecureString)
+  -adminPassword (Read-Host "ManufacturingVM Password" -AsSecureString) `
+  -AsJob
+```
+
+</details>
+
+<details>
+<summary>Check deployment status</summary>
+
+```powershell
+# Check background jobs
+Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
+
+# Check deployment status in Azure
+Get-AzResourceGroupDeployment -ResourceGroupName $RG | Select-Object DeploymentName, ProvisioningState
 ```
 
 </details>
@@ -189,7 +206,7 @@ $gwIp2     = New-AzVirtualNetworkGatewayIpConfig -Name "gwIpConfig2" -SubnetId $
 New-AzVirtualNetworkGateway -ResourceGroupName $RG -Location $LOCATION_WESTEU -Name $GW2_NAME -IpConfigurations $gwIp2 -GatewayType VPN -VpnType RouteBased -GatewaySku $GW_SKU -VpnGatewayGeneration $GW_GEN -AsJob
 
 # Check job status
-Get-Job
+Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 
 # Check gateway status — run periodically until both show Succeeded
 Get-AzVirtualNetworkGateway -ResourceGroupName $RG -Name $GW1_NAME | Select-Object Name, ProvisioningState
@@ -216,6 +233,13 @@ Get-AzVirtualNetworkGatewayConnection -ResourceGroupName $RG -Name $CONN2_NAME |
 
 </details>
 
+> After creating the connections, status starts as `Unknown` — this is normal. Wait 3-5 minutes and check again. Expected progression: `Unknown → Connecting → Connected`
+
+```powershell
+Get-AzVirtualNetworkGatewayConnection -ResourceGroupName $RG -Name $CONN1_NAME | Select-Object Name, ConnectionStatus
+Get-AzVirtualNetworkGatewayConnection -ResourceGroupName $RG -Name $CONN2_NAME | Select-Object Name, ConnectionStatus
+```
+
 **Tasks 10-11 — Manual**: RDP to ManufacturingVM → `Test-NetConnection <IP_CoreServicesVM> -port 3389` → expected: `True`
 
 ---
@@ -236,7 +260,15 @@ Get-AzVirtualWan -ResourceGroupName $RG -Name $VWAN_NAME | Select-Object Name, L
 <summary>Task 2 — Virtual Hub ⏱️ 30 min</summary>
 
 ```powershell
-New-AzVirtualHub -ResourceGroupName $RG -Name $HUB_NAME -Location $LOCATION_EASTUS -VirtualWan (Get-AzVirtualWan -ResourceGroupName $RG -Name $VWAN_NAME) -AddressPrefix $HUB_PREFIX
+New-AzVirtualHub `
+  -ResourceGroupName $RG -Name $HUB_NAME `
+  -Location $LOCATION_EASTUS `
+  -VirtualWan (Get-AzVirtualWan -ResourceGroupName $RG -Name $VWAN_NAME) `
+  -AddressPrefix $HUB_PREFIX -AsJob
+
+Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
+
+# Check status periodically until Succeeded
 Get-AzVirtualHub -ResourceGroupName $RG -Name $HUB_NAME | Select-Object Name, ProvisioningState
 ```
 
@@ -245,11 +277,18 @@ Get-AzVirtualHub -ResourceGroupName $RG -Name $HUB_NAME | Select-Object Name, Pr
 <details>
 <summary>Task 3 — Connect ResearchVnet ⛔ only after Hub shows Succeeded</summary>
 
+> ResearchVnet already exists from the ARM template deployment (Task 1) in `southeastasia` — do not recreate it.
+
 ```powershell
-$res   = New-AzVirtualNetworkSubnetConfig -Name $VNET3_SUB1_NAME -AddressPrefix $VNET3_SUB1
-New-AzVirtualNetwork -ResourceGroupName $RG -Location $LOCATION_EASTUS -Name $VNET3_NAME -AddressPrefix $VNET3_PREFIX -Subnet $res
 $vnet3 = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET3_NAME
-New-AzVirtualHubVnetConnection -ResourceGroupName $RG -VirtualHubName $HUB_NAME -Name $VWAN_CONN -RemoteVirtualNetwork $vnet3
+
+New-AzVirtualHubVnetConnection `
+  -ResourceGroupName $RG -VirtualHubName $HUB_NAME `
+  -Name $VWAN_CONN -RemoteVirtualNetwork $vnet3 -AsJob
+
+Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
+
+# Check status
 Get-AzVirtualHubVnetConnection -ResourceGroupName $RG -VirtualHubName $HUB_NAME -Name $VWAN_CONN | Select-Object Name, ProvisioningState
 ```
 
