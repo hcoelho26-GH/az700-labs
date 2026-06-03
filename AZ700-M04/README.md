@@ -6,13 +6,11 @@
 <summary>Show variables</summary>
 
 ```powershell
-# LearnOnDemand: RGs are pre-created — update the suffix to match your lab number
-$RG              = "IntLB-RG<LABID>"
-$RG_TM           = "Contoso-RG-TM1"
+# Part 4 - Load Balancer
+# LearnOnDemand: RG is created in Task 1 (not pre-created)
+$RG              = "IntLB-RG"
 $LOCATION        = "eastus"
-$LOCATION_WESTEU = "westeurope"
 
-# Part 4 - VNet
 $VNET_NAME      = "IntLB-VNet"         ; $VNET_PREFIX    = "10.1.0.0/16"
 $SUBNET_BE_NAME = "myBackendSubnet"    ; $SUBNET_BE      = "10.1.0.0/24"
 $SUBNET_FE_NAME = "myFrontEndSubnet"   ; $SUBNET_FE      = "10.1.2.0/24"
@@ -20,31 +18,35 @@ $BASTION_NAME   = "myBastionHost"
 $BASTION_PIP    = "myBastionIP"
 $BASTION_SUBNET = "10.1.1.0/26"
 
-# Part 4 - Backend VMs
 $VM1_NAME   = "myVM1" ; $VM2_NAME = "myVM2" ; $VM3_NAME = "myVM3"
 $NSG_NAME   = "myNSG"
 $AVSET_NAME = "myAvailabilitySet"
 $VM_SIZE    = "Standard_DS2_v3"
 $ADMIN_USER = "TestUser"
 
-# Part 4 - Load Balancer
 $LB_NAME       = "myIntLoadBalancer"
 $LB_FE_NAME    = "LoadBalancerFrontEnd"
 $LB_BE_NAME    = "myBackendPool"
 $LB_PROBE_NAME = "myHealthProbe"
 $LB_RULE_NAME  = "myHTTPRule"
 
-# Part 4 - Test VM
 $TESTVM_NAME = "myTestVM"
 $TESTVM_NIC  = "myTestVM-nic"
 
-# Part 6 - Web Apps
-$APP_PLAN_NAME = "ContosoAppPlan"
-$WEBAPP1_NAME  = "ContosoWebApp-EastUS"
-$WEBAPP2_NAME  = "ContosoWebApp-WestEU"
-
 # Part 6 - Traffic Manager
-$TM_PROFILE  = "Contoso-TMProfile"
+# LearnOnDemand: use region capacity checker in lab guide to find available regions
+# Session example: West US 2 and Canada Central
+$RG_TM1       = "Contoso-RG-TM1"
+$RG_TM2       = "Contoso-RG-TM2"
+$LOCATION_TM1 = "westus2"        # Update based on capacity checker result
+$LOCATION_TM2 = "canadacentral"  # Update based on capacity checker result
+
+$WEBAPP1_NAME = "ContosoWebAppOne<LABID>"
+$WEBAPP2_NAME = "ContosoWebAppTwo<LABID>"
+$APP_PLAN1    = "ContosoAppServicePlanOne<LABID>"
+$APP_PLAN2    = "ContosoAppServicePlanTwo<LABID>"
+
+$TM_PROFILE  = "Contoso-TMProfile<LABID>"  # Must be globally unique — add LABID
 $TM_EP1_NAME = "ContosoEastEndpoint"
 $TM_EP2_NAME = "ContosoWestEndpoint"
 ```
@@ -57,14 +59,14 @@ $TM_EP2_NAME = "ContosoWestEndpoint"
 
 ### Task 1 — VNet + Bastion
 
-> ⚠️ **LearnOnDemand**: skip `New-AzResourceGroup` — RG is pre-created.
+> ⏱️ Bastion takes ~11 min to provision.  
+> 💡 **Tip**: You can start Task 2 (ARM template deployment) immediately after launching Bastion — it does not depend on Bastion completing.
 
 <details>
 <summary>Show code</summary>
 
 ```powershell
-# Unrestricted only
-# New-AzResourceGroup -Name $RG -Location $LOCATION
+New-AzResourceGroup -Name $RG -Location $LOCATION
 
 $subnetBe      = New-AzVirtualNetworkSubnetConfig -Name $SUBNET_BE_NAME -AddressPrefix $SUBNET_BE
 $subnetFe      = New-AzVirtualNetworkSubnetConfig -Name $SUBNET_FE_NAME -AddressPrefix $SUBNET_FE
@@ -97,7 +99,12 @@ Get-AzVirtualNetworkSubnetConfig `
 ### Task 2 — Backend VMs
 
 > ⚠️ **LearnOnDemand**: VM creation via PowerShell is blocked. Use ARM template below.  
-> The template creates myVM1, myVM2 and myVM3 and installs IIS automatically via `install-iis.ps1`.
+> ⏱️ ~8 min for 3 VMs via ARM template.  
+> 💡 **Tip**: You can start Tasks 3-4 (Load Balancer + Rules) while VMs are provisioning. Only add VMs to Backend Pool after they complete.
+
+The ARM template creates myVM1, myVM2 and myVM3 and installs IIS automatically via `install-iis.ps1`.
+
+> ⚠️ NIC names created by ARM template are `myVMnic1`, `myVMnic2`, `myVMnic3` — not `myVM1-nic`. Use these when adding to Backend Pool.
 
 <details>
 <summary>ARM Template — LearnOnDemand (recommended)</summary>
@@ -146,7 +153,6 @@ foreach ($vmName in @($VM1_NAME, $VM2_NAME, $VM3_NAME)) {
 
 Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 
-# Install IIS after VMs are provisioned
 $iisScript = @"
 Install-WindowsFeature -name Web-Server -IncludeManagementTools
 Remove-Item C:\inetpub\wwwroot\iisstart.htm
@@ -162,6 +168,8 @@ foreach ($vmName in @($VM1_NAME, $VM2_NAME, $VM3_NAME)) {
 ---
 
 ### Tasks 3-4 — Load Balancer + Rules
+
+> 💡 **Tip**: Run this while VMs are provisioning. Only the Backend Pool association requires VMs to exist.
 
 <details>
 <summary>Show code</summary>
@@ -181,11 +189,14 @@ $lb = Get-AzLoadBalancer -ResourceGroupName $RG -Name $LB_NAME
 $lb | Add-AzLoadBalancerBackendAddressPoolConfig -Name $LB_BE_NAME | Set-AzLoadBalancer
 
 # Add VMs to Backend Pool
+# LearnOnDemand: NIC names are myVMnic1, myVMnic2, myVMnic3 (ARM template naming)
+# Unrestricted: NIC names are myVM1-nic, myVM2-nic, myVM3-nic
 $lb     = Get-AzLoadBalancer -ResourceGroupName $RG -Name $LB_NAME
 $bePool = Get-AzLoadBalancerBackendAddressPool -LoadBalancer $lb -Name $LB_BE_NAME
 
-foreach ($vmName in @($VM1_NAME, $VM2_NAME, $VM3_NAME)) {
-  $nic = Get-AzNetworkInterface -ResourceGroupName $RG -Name "$vmName-nic"
+foreach ($i in 1..3) {
+  $nic = Get-AzNetworkInterface -ResourceGroupName $RG -Name "myVMnic$i"  # ARM template naming
+  # $nic = Get-AzNetworkInterface -ResourceGroupName $RG -Name "myVM$i-nic"  # PowerShell naming
   $nic.IpConfigurations[0].LoadBalancerBackendAddressPools = $bePool
   Set-AzNetworkInterface -NetworkInterface $nic
 }
@@ -198,21 +209,13 @@ $lb | Add-AzLoadBalancerProbeConfig `
   Set-AzLoadBalancer
 
 # LB Rule
+# Note: -EnableFloatingIP parameter not supported in all versions — omit it (default is $false)
 $lb     = Get-AzLoadBalancer -ResourceGroupName $RG -Name $LB_NAME
 $feIp   = Get-AzLoadBalancerFrontendIpConfig -LoadBalancer $lb -Name $LB_FE_NAME
 $bePool = Get-AzLoadBalancerBackendAddressPool -LoadBalancer $lb -Name $LB_BE_NAME
 $probe  = Get-AzLoadBalancerProbeConfig -LoadBalancer $lb -Name $LB_PROBE_NAME
 
-$lb | Add-AzLoadBalancerRuleConfig `
-  -Name $LB_RULE_NAME `
-  -FrontendIpConfiguration $feIp `
-  -BackendAddressPool $bePool `
-  -Probe $probe `
-  -Protocol Tcp `
-  -FrontendPort 80 -BackendPort 80 `
-  -IdleTimeoutInMinutes 15 `
-  -EnableFloatingIP $false |
-  Set-AzLoadBalancer
+$lb | Add-AzLoadBalancerRuleConfig -Name $LB_RULE_NAME -FrontendIpConfiguration $feIp -BackendAddressPool $bePool -Probe $probe -Protocol Tcp -FrontendPort 80 -BackendPort 80 -IdleTimeoutInMinutes 15 | Set-AzLoadBalancer
 
 Get-AzLoadBalancer -ResourceGroupName $RG -Name $LB_NAME | Select-Object Name, ProvisioningState
 ```
@@ -223,44 +226,28 @@ Get-AzLoadBalancer -ResourceGroupName $RG -Name $LB_NAME | Select-Object Name, P
 
 ### Task 4 — Test VM
 
-> ⚠️ **LearnOnDemand**: use ARM template if VM creation is blocked.
-
-<details>
-<summary>ARM Template — LearnOnDemand</summary>
-
-Upload `azuredeploy.json` and `azuredeploy.parameters.vm1.json` to Cloud Shell:
-
-```powershell
-New-AzResourceGroupDeployment `
-  -ResourceGroupName $RG `
-  -Name "deploy-testvm" `
-  -TemplateFile azuredeploy.json `
-  -TemplateParameterFile azuredeploy.parameters.vm1.json `
-  -adminPassword (Read-Host "TestVM Password" -AsSecureString) `
-  -AsJob
-
-Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
-
-Get-AzResourceGroupDeployment -ResourceGroupName $RG | Select-Object DeploymentName, ProvisioningState
-```
-
-</details>
+> ⚠️ **LearnOnDemand**: VM creation via PowerShell is blocked. Create via portal.  
+> Image: **Windows Server 2025 Datacenter Server Core - x64 Gen 2**  
+> Networking: VNet `IntLB-VNet`, Subnet `myBackendSubnet`, Public IP `None`, NSG `myNSG`, Load balancing `None`
 
 <details>
 <summary>PowerShell — unrestricted environments</summary>
 
 ```powershell
+$adminPassword = Read-Host "TestVM Password" -AsSecureString
+$credential    = New-Object System.Management.Automation.PSCredential($ADMIN_USER, $adminPassword)
+
 $vnet     = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET_NAME
 $subnetId = (Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $SUBNET_BE_NAME).Id
 
 $nic = New-AzNetworkInterface `
   -ResourceGroupName $RG -Location $LOCATION `
-  -Name $TESTVM_NIC -SubnetId $subnetId `
+  -Name "myTestVM-nic" -SubnetId $subnetId `
   -NetworkSecurityGroupId $nsg.Id
 
 $vmConfig = New-AzVMConfig -VMName $TESTVM_NAME -VMSize $VM_SIZE |
   Set-AzVMOperatingSystem -Windows -ComputerName $TESTVM_NAME -Credential $credential |
-  Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2022-Datacenter-Core -Version latest |
+  Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2025-datacenter-core-g2 -Version latest |
   Add-AzVMNetworkInterface -Id $nic.Id
 
 New-AzVM -ResourceGroupName $RG -Location $LOCATION -VM $vmConfig -AsJob
@@ -272,12 +259,20 @@ Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 
 ---
 
-### Task 5 — Test LB ⚠️ Manual
+### Task 5 — Test LB
 
-Connect to `myTestVM` via Bastion → open browser → navigate to LB Private IP → refresh to see responses from different VMs.
+> ⚠️ **Server Core**: no browser available. Test via PowerShell inside myTestVM via Bastion.  
+> Connect to myTestVM via Bastion → select option **15 (Exit to PowerShell)** → run:
 
 ```powershell
-# Get LB Private IP
+Invoke-WebRequest -Uri "http://<LB_PRIVATE_IP>" -UseBasicParsing | Select-Object -ExpandProperty Content
+```
+
+> Expected: `myVM1`, `myVM2` or `myVM3`. `StatusCode: 200` confirms LB is working.  
+> Note: Session persistence may always return the same VM when connecting from the same IP — this is normal behaviour.
+
+```powershell
+# Get LB Private IP from Cloud Shell
 (Get-AzLoadBalancer -ResourceGroupName $RG -Name $LB_NAME).FrontendIpConfigurations[0].PrivateIpAddress
 ```
 
@@ -285,68 +280,102 @@ Connect to `myTestVM` via Bastion → open browser → navigate to LB Private IP
 
 ## Part 6 — Traffic Manager
 
-### Tasks 1-3 — Web Apps + Profile + Endpoints
+### Tasks 1 — Create Web Apps
 
-> ⚠️ **LearnOnDemand**: skip `New-AzResourceGroup` — RG is pre-created.
+> ⚠️ **LearnOnDemand**: App Service Plans and Web Apps are blocked via PowerShell — create via portal only.  
+> ⚠️ Use the **region capacity checker** in the lab guide to find two available regions before creating. East US and West Europe may not have capacity.  
+> ⚠️ On the Basics tab, uncheck **"Try a secure unique default hostname"** to avoid policy errors.  
+> ⚠️ On the Monitor + secure tab, set **Application Insights** to **No**.
+
+| Setting | Web App 1 | Web App 2 |
+|---------|-----------|-----------|
+| Resource Group | Contoso-RG-TM1 | Contoso-RG-TM2 |
+| Name | ContosoWebAppOne`<LABID>` | ContosoWebAppTwo`<LABID>` |
+| Runtime | ASP.NET V4.8 | ASP.NET V4.8 |
+| OS | Windows | Windows |
+| Region | From capacity checker | From capacity checker |
+| Plan | ContosoAppServicePlanOne`<LABID>` | ContosoAppServicePlanTwo`<LABID>` |
+| Pricing | Premium V3 P1V3 | Premium V3 P1V3 |
+
+---
+
+### Task 2 — Traffic Manager Profile
+
+> ⚠️ `$TM_PROFILE` must be globally unique — add LABID to avoid DNS conflict.
 
 <details>
 <summary>Show code</summary>
 
 ```powershell
-# Unrestricted only
-# New-AzResourceGroup -Name $RG_TM -Location $LOCATION
-
-New-AzAppServicePlan `
-  -ResourceGroupName $RG_TM -Location $LOCATION `
-  -Name "$APP_PLAN_NAME-EastUS" -Tier Standard -NumberofWorkers 1 -WorkerSize Small
-
-New-AzWebApp `
-  -ResourceGroupName $RG_TM -Location $LOCATION `
-  -AppServicePlan "$APP_PLAN_NAME-EastUS" -Name $WEBAPP1_NAME
-
-New-AzAppServicePlan `
-  -ResourceGroupName $RG_TM -Location $LOCATION_WESTEU `
-  -Name "$APP_PLAN_NAME-WestEU" -Tier Standard -NumberofWorkers 1 -WorkerSize Small
-
-New-AzWebApp `
-  -ResourceGroupName $RG_TM -Location $LOCATION_WESTEU `
-  -AppServicePlan "$APP_PLAN_NAME-WestEU" -Name $WEBAPP2_NAME
-
-Get-AzWebApp -ResourceGroupName $RG_TM | Select-Object Name, Location, State
-
 New-AzTrafficManagerProfile `
-  -ResourceGroupName $RG_TM -Name $TM_PROFILE `
+  -ResourceGroupName $RG_TM1 -Name $TM_PROFILE `
   -TrafficRoutingMethod Priority `
   -RelativeDnsName $TM_PROFILE `
   -Ttl 30 -MonitorProtocol HTTP -MonitorPort 80 -MonitorPath "/"
 
-$app1 = Get-AzWebApp -ResourceGroupName $RG_TM -Name $WEBAPP1_NAME
-$app2 = Get-AzWebApp -ResourceGroupName $RG_TM -Name $WEBAPP2_NAME
-
-New-AzTrafficManagerEndpoint `
-  -ResourceGroupName $RG_TM -ProfileName $TM_PROFILE `
-  -Name $TM_EP1_NAME -Type AzureEndpoints `
-  -TargetResourceId $app1.Id -EndpointStatus Enabled -Priority 1
-
-New-AzTrafficManagerEndpoint `
-  -ResourceGroupName $RG_TM -ProfileName $TM_PROFILE `
-  -Name $TM_EP2_NAME -Type AzureEndpoints `
-  -TargetResourceId $app2.Id -EndpointStatus Enabled -Priority 2
-
-Get-AzTrafficManagerEndpoint -ResourceGroupName $RG_TM -ProfileName $TM_PROFILE -Type AzureEndpoints | Select-Object Name, EndpointStatus, Priority
+Get-AzTrafficManagerProfile -ResourceGroupName $RG_TM1 -Name $TM_PROFILE | Select-Object Name, TrafficRoutingMethod, ProfileStatus
 ```
 
 </details>
 
 ---
 
-### Task 4 — Test Traffic Manager ⚠️ Manual
+### Task 3 — Traffic Manager Endpoints
 
-Navigate to Traffic Manager DNS → disable East US endpoint to test failover to West Europe.
+<details>
+<summary>Show code</summary>
+
+```powershell
+$app1 = Get-AzWebApp -ResourceGroupName $RG_TM1 -Name $WEBAPP1_NAME
+$app2 = Get-AzWebApp -ResourceGroupName $RG_TM2 -Name $WEBAPP2_NAME
+
+New-AzTrafficManagerEndpoint `
+  -ResourceGroupName $RG_TM1 -ProfileName $TM_PROFILE `
+  -Name $TM_EP1_NAME -Type AzureEndpoints `
+  -TargetResourceId $app1.Id -EndpointStatus Enabled -Priority 1
+
+New-AzTrafficManagerEndpoint `
+  -ResourceGroupName $RG_TM1 -ProfileName $TM_PROFILE `
+  -Name $TM_EP2_NAME -Type AzureEndpoints `
+  -TargetResourceId $app2.Id -EndpointStatus Enabled -Priority 2
+
+# Verify endpoints
+Get-AzTrafficManagerProfile -ResourceGroupName $RG_TM1 -Name $TM_PROFILE |
+  Select-Object -ExpandProperty Endpoints |
+  Select-Object Name, EndpointStatus, EndpointMonitorStatus
+```
+
+</details>
+
+---
+
+### Task 4 — Test Traffic Manager
 
 ```powershell
 # Get Traffic Manager DNS
-(Get-AzTrafficManagerProfile -ResourceGroupName $RG_TM -Name $TM_PROFILE).DnsConfig.Fqdn
+(Get-AzTrafficManagerProfile -ResourceGroupName $RG_TM1 -Name $TM_PROFILE).DnsConfig.Fqdn
+```
+
+Navigate to that DNS in browser — should show the primary Web App.
+
+**Test failover** — disable primary endpoint:
+
+```powershell
+Disable-AzTrafficManagerEndpoint `
+  -ResourceGroupName $RG_TM1 `
+  -ProfileName $TM_PROFILE `
+  -Name $TM_EP1_NAME `
+  -Type AzureEndpoints -Force
+```
+
+> ⏱️ After disabling the primary endpoint, the secondary may show `Degraded` for **up to 20 minutes** — this is normal. Traffic Manager requires multiple consecutive successful health checks before promoting the endpoint.  
+> The browser may already resolve to the secondary endpoint even while `Degraded` is shown — this is expected behaviour.
+
+```powershell
+# Monitor endpoint status
+Get-AzTrafficManagerProfile -ResourceGroupName $RG_TM1 -Name $TM_PROFILE |
+  Select-Object -ExpandProperty Endpoints |
+  Select-Object Name, EndpointStatus, EndpointMonitorStatus
 ```
 
 ---
@@ -356,7 +385,5 @@ Navigate to Traffic Manager DNS → disable East US endpoint to test failover to
 | File | Purpose |
 |------|---------|
 | `azuredeploy.json` | Creates VMs + NICs + NSG + installs IIS automatically |
-| `azuredeploy.parameters.json` | Creates myVM1, myVM2, myVM3 (3 VMs in one deployment) |
-| `azuredeploy.parameters.vm1.json` | Creates myVM1 only |
-| `azuredeploy.parameters.vm2.json` | Creates myVM2 only |
-| `azuredeploy.parameters.vm3.json` | Creates myVM3 only |
+| `azuredeploy.parameters.json` | Creates myVM1, myVM2, myVM3 (3 VMs, use `-vmCount 1` for single VM) |
+| `install-iis.ps1` | Installs IIS and sets VM hostname as default page (called by ARM template) |
