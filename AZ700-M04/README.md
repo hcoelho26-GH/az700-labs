@@ -6,9 +6,9 @@
 <summary>Show variables</summary>
 
 ```powershell
-# LearnOnDemand: RG is pre-created — update the suffix to match your lab number
+# LearnOnDemand: RGs are pre-created — update the suffix to match your lab number
 $RG              = "IntLB-RG<LABID>"
-$RG_TM           = "Contoso-RG"
+$RG_TM           = "Contoso-RG-TM1"
 $LOCATION        = "eastus"
 $LOCATION_WESTEU = "westeurope"
 
@@ -81,7 +81,9 @@ $bastionPip = New-AzPublicIpAddress `
 
 New-AzBastion `
   -ResourceGroupName $RG -Name $BASTION_NAME `
-  -VirtualNetwork $vnet -PublicIpAddress $bastionPip
+  -VirtualNetwork $vnet -PublicIpAddress $bastionPip -AsJob
+
+Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 
 Get-AzVirtualNetworkSubnetConfig `
   -VirtualNetwork (Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET_NAME) |
@@ -94,13 +96,13 @@ Get-AzVirtualNetworkSubnetConfig `
 
 ### Task 2 — Backend VMs
 
-> ⚠️ **LearnOnDemand**: VM creation via PowerShell is blocked. Use ARM templates below.
+> ⚠️ **LearnOnDemand**: VM creation via PowerShell is blocked. Use ARM template below.  
+> The template creates myVM1, myVM2 and myVM3 and installs IIS automatically via `install-iis.ps1`.
 
 <details>
 <summary>ARM Template — LearnOnDemand (recommended)</summary>
 
-Upload `azuredeploy.json` and `azuredeploy.parameters.json` to Cloud Shell.  
-The template creates **myVM1, myVM2 and myVM3** in one deployment and installs IIS automatically via `install-iis.ps1`.
+Upload `azuredeploy.json` and `azuredeploy.parameters.json` to Cloud Shell:
 
 ```powershell
 New-AzResourceGroupDeployment `
@@ -116,8 +118,6 @@ Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 # Check deployment status
 Get-AzResourceGroupDeployment -ResourceGroupName $RG | Select-Object DeploymentName, ProvisioningState
 ```
-
-> Note: IIS is installed automatically by the ARM template via `install-iis.ps1` — no need to run it manually.
 
 </details>
 
@@ -223,7 +223,7 @@ Get-AzLoadBalancer -ResourceGroupName $RG -Name $LB_NAME | Select-Object Name, P
 
 ### Task 4 — Test VM
 
-> ⚠️ **LearnOnDemand**: VM creation via PowerShell may be blocked. Use ARM template if needed.
+> ⚠️ **LearnOnDemand**: use ARM template if VM creation is blocked.
 
 <details>
 <summary>ARM Template — LearnOnDemand</summary>
@@ -240,6 +240,8 @@ New-AzResourceGroupDeployment `
   -AsJob
 
 Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
+
+Get-AzResourceGroupDeployment -ResourceGroupName $RG | Select-Object DeploymentName, ProvisioningState
 ```
 
 </details>
@@ -284,6 +286,8 @@ Connect to `myTestVM` via Bastion → open browser → navigate to LB Private IP
 ## Part 6 — Traffic Manager
 
 ### Tasks 1-3 — Web Apps + Profile + Endpoints
+
+> ⚠️ **LearnOnDemand**: skip `New-AzResourceGroup` — RG is pre-created.
 
 <details>
 <summary>Show code</summary>
@@ -344,6 +348,8 @@ Navigate to Traffic Manager DNS → disable East US endpoint to test failover to
 # Get Traffic Manager DNS
 (Get-AzTrafficManagerProfile -ResourceGroupName $RG_TM -Name $TM_PROFILE).DnsConfig.Fqdn
 ```
+
+---
 
 ## ARM Templates — File Reference
 
