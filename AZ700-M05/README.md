@@ -6,7 +6,7 @@
 <summary>Show variables</summary>
 
 ```powershell
-# LearnOnDemand: RG may be pre-created — check before running New-AzResourceGroup
+# LearnOnDemand: check if RG is pre-created before running New-AzResourceGroup
 $RG              = "ContosoResourceGroup"
 $LOCATION        = "eastus"
 $LOCATION_WESTEU = "westeurope"
@@ -28,13 +28,15 @@ $VM_SIZE    = "Standard_DS2_v3"
 $ADMIN_USER = "TestUser"
 
 # Part 6 - Front Door
-# LearnOnDemand: use region capacity checker — App Services may be blocked via PowerShell
-$APP_PLAN_EASTUS = "ContosoAppPlan-EastUS"
-$APP_PLAN_WESTEU = "ContosoAppPlan-WestEU"
-$WEBAPP1_NAME    = "ContosoWebApp1<LABID>"
-$WEBAPP2_NAME    = "ContosoWebApp2<LABID>"
-$FD_NAME         = "ContosoFrontDoor<LABID>"  # Must be globally unique — add LABID
-$FD_ORIGIN_GROUP = "default-origin-group"
+# LearnOnDemand: use region capacity checker — Standard S1 pricing plan
+# Session example: Central US and West Europe
+$LOCATION_FD1    = "centralus"
+$LOCATION_FD2    = "westeurope"
+$APP_PLAN_EASTUS = "myAppServicePlanOne<LABID>"
+$APP_PLAN_WESTEU = "myAppServicePlanTwo<LABID>"
+$WEBAPP1_NAME    = "WebAppContoso-1-<LABID>"
+$WEBAPP2_NAME    = "WebAppContoso-2-<LABID>"
+$FD_NAME         = "ContosoFrontDoor<INICIAIS>"  # Must be unique in subscription — add your initials
 ```
 
 </details>
@@ -46,8 +48,9 @@ $FD_ORIGIN_GROUP = "default-origin-group"
 ### Task 1 — Create Application Gateway
 
 > ⚠️ **LearnOnDemand**: check if RG is pre-created before running `New-AzResourceGroup`.  
-> ⏱️ Application Gateway takes ~10-15 min to provision.  
-> 💡 **Tip**: You can start Task 2 (ARM template deployment) immediately after launching the App Gateway — VMs do not depend on it completing.
+> ⏱️ Application Gateway takes ~9 min to provision.  
+> 💡 **Tip**: You can start Task 2 (ARM template deployment) immediately after launching the App Gateway with `-AsJob` — VMs do not depend on it completing.  
+> ⛔ Only add VMs to Backend Pool (Task 3) after App Gateway shows `Succeeded`.
 
 <details>
 <summary>Show code</summary>
@@ -88,12 +91,12 @@ New-AzApplicationGateway `
 
 Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 
-# Check status periodically
-Get-AzApplicationGateway -ResourceGroupName $RG -Name $AG_NAME | Select-Object Name, ProvisioningState, OperationalState
-
 # Add BackendSubnet after VNet is created
 $vnet = Get-AzVirtualNetwork -ResourceGroupName $RG -Name $VNET_NAME
 Add-AzVirtualNetworkSubnetConfig -Name $SUBNET_BE_NAME -VirtualNetwork $vnet -AddressPrefix $SUBNET_BE | Set-AzVirtualNetwork
+
+# Check status periodically
+Get-AzApplicationGateway -ResourceGroupName $RG -Name $AG_NAME | Select-Object Name, ProvisioningState, OperationalState
 ```
 
 </details>
@@ -104,13 +107,15 @@ Add-AzVirtualNetworkSubnetConfig -Name $SUBNET_BE_NAME -VirtualNetwork $vnet -Ad
 
 > ⚠️ **LearnOnDemand**: VM creation via PowerShell is blocked. Use ARM template below.  
 > ⏱️ ~8-10 min for 2 VMs via ARM template.  
-> ⚠️ IIS is **not** installed by the ARM template — run the IIS script manually after deployment.  
+> ⚠️ IIS is **not** installed by the ARM template — run the IIS script manually after deployment completes.  
+> ⚠️ Both VMs use the same `adminPassword` passed to the ARM template.  
+> ⚠️ **BackendSubnet must exist before running this deployment** — it is created at the end of Task 1.  
 > 💡 **Tip**: You can add VMs to the Backend Pool (Task 3) while IIS is installing.
 
 <details>
 <summary>ARM Template — LearnOnDemand (recommended)</summary>
 
-Upload `backend.json`, `backend.parameters.json` and `install-iis.ps1` to Cloud Shell:
+Upload `backend.json` and `backend.parameters.json` to Cloud Shell:
 
 ```powershell
 New-AzResourceGroupDeployment `
@@ -127,7 +132,7 @@ Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
 Get-AzResourceGroupDeployment -ResourceGroupName $RG | Select-Object DeploymentName, ProvisioningState
 ```
 
-After deployment completes, install IIS on both VMs:
+After deployment completes, install IIS on both VMs via Cloud Shell:
 
 ```powershell
 $iisScript = @"
@@ -137,7 +142,6 @@ Add-Content -Path "C:\inetpub\wwwroot\iisstart.htm" -Value `$(`$env:computername
 "@
 foreach ($vmName in @($VM1_NAME, $VM2_NAME)) {
   Invoke-AzVMRunCommand -ResourceGroupName $RG -Name $vmName -CommandId RunPowerShellScript -ScriptString $iisScript
-  Write-Host "IIS installed on $vmName"
 }
 ```
 
@@ -197,8 +201,6 @@ $nic2.IpConfigurations[0].ApplicationGatewayBackendAddressPools = $bePool
 
 Set-AzNetworkInterface -NetworkInterface $nic1
 Set-AzNetworkInterface -NetworkInterface $nic2
-
-Write-Host "Backend VMs added to backend pool."
 ```
 
 </details>
@@ -219,29 +221,29 @@ Navigate to App Gateway public IP → refresh to see responses from BackendVM1 a
 
 ### Task 1 — Create Web Apps
 
-> ⚠️ **LearnOnDemand**: App Service Plans and Web Apps may be blocked via PowerShell — create via portal if needed.  
+> ✅ **LearnOnDemand**: App Service Plans and Web Apps work via PowerShell in this lab.  
+> ⚠️ Use the exact names from the lab including LABID — e.g. `WebAppContoso-1-<LABID>`.  
 > ⚠️ Use the **region capacity checker** in the lab guide to find two available regions.  
-> ⚠️ On the Basics tab, uncheck **"Try a secure unique default hostname"** to avoid policy errors.  
-> ⚠️ On the Monitor + secure tab, set **Application Insights** to **No**.
+> ⚠️ Pricing plan: **Standard S1**.
 
 <details>
-<summary>PowerShell — try first, use portal if blocked</summary>
+<summary>Show code</summary>
 
 ```powershell
 New-AzAppServicePlan `
-  -ResourceGroupName $RG -Location $LOCATION `
+  -ResourceGroupName $RG -Location $LOCATION_FD1 `
   -Name $APP_PLAN_EASTUS -Tier Standard -NumberofWorkers 1 -WorkerSize Small
 
 New-AzWebApp `
-  -ResourceGroupName $RG -Location $LOCATION `
+  -ResourceGroupName $RG -Location $LOCATION_FD1 `
   -AppServicePlan $APP_PLAN_EASTUS -Name $WEBAPP1_NAME
 
 New-AzAppServicePlan `
-  -ResourceGroupName $RG -Location $LOCATION_WESTEU `
+  -ResourceGroupName $RG -Location $LOCATION_FD2 `
   -Name $APP_PLAN_WESTEU -Tier Standard -NumberofWorkers 1 -WorkerSize Small
 
 New-AzWebApp `
-  -ResourceGroupName $RG -Location $LOCATION_WESTEU `
+  -ResourceGroupName $RG -Location $LOCATION_FD2 `
   -AppServicePlan $APP_PLAN_WESTEU -Name $WEBAPP2_NAME
 
 Get-AzWebApp -ResourceGroupName $RG | Select-Object Name, Location, State
@@ -251,43 +253,48 @@ Get-AzWebApp -ResourceGroupName $RG | Select-Object Name, Location, State
 
 ---
 
-### Task 2 — Create Azure Front Door
+### Task 2 — Create Azure Front Door ⚠️ Portal only
 
-<details>
-<summary>Show code</summary>
+> ⚠️ Use **Quick Create** via portal — it creates profile + endpoint + origin group + route in one step.  
+> ⚠️ Creating via PowerShell (`New-AzFrontDoorCdn*`) leaves the endpoint without a route and without a working origin group — use portal.  
+> ⚠️ `$FD_NAME` must be unique in the subscription — add your initials (e.g. `ContosoFrontDoorHVC`).
 
-```powershell
-$app1 = Get-AzWebApp -ResourceGroupName $RG -Name $WEBAPP1_NAME
-$app2 = Get-AzWebApp -ResourceGroupName $RG -Name $WEBAPP2_NAME
+**Portal steps:**
 
-$origin1     = New-AzFrontDoorOrigin -Name "webapp1-origin" -HostName $app1.DefaultHostName -HttpPort 80 -HttpsPort 443 -Priority 1 -Weight 1000
-$origin2     = New-AzFrontDoorOrigin -Name "webapp2-origin" -HostName $app2.DefaultHostName -HttpPort 80 -HttpsPort 443 -Priority 2 -Weight 1000
-$originGroup = New-AzFrontDoorOriginGroup -Name $FD_ORIGIN_GROUP -SessionAffinityState Disabled
-$route       = New-AzFrontDoorRoute -Name "default-route" -OriginGroup $originGroup -PatternsToMatch "/*" -SupportedProtocol Http,Https -HttpsRedirect Enabled
+1. Search for **Front Door and CDN profiles** → **Create**
+2. Select **Quick create** → **Continue**
+3. Fill in:
 
-New-AzFrontDoor `
-  -ResourceGroupName $RG -Name $FD_NAME `
-  -SkuName Standard_AzureFrontDoor `
-  -Origin @($origin1, $origin2) `
-  -OriginGroup $originGroup `
-  -Route $route -AsJob
+| Setting | Value |
+|---------|-------|
+| Resource group | ContosoResourceGroup |
+| Name | ContosoFrontDoor`<INICIAIS>` |
+| Tier | Standard |
+| Endpoint Name | FDendpoint |
+| Origin Type | App Service |
+| Origin host name | `WebAppContoso-1-<LABID>` |
 
-Get-Job | Format-List Id, Name, State, PSBeginTime, PSEndTime
+4. **Review + Create** → **Create**
+5. After deployment → **Go to resource**
+6. **Origin Groups** → select `default-origin-group`
+7. **+ Add an origin** → App Service → `WebAppContoso-2-<LABID>` → **Add** → **Update**
 
-Get-AzFrontDoor -ResourceGroupName $RG -Name $FD_NAME | Select-Object Name, ProvisioningState
-```
-
-</details>
+> ⚠️ Health probe must use **HTTPS** — App Service redirects HTTP to HTTPS by default.  
+> In Origin Groups → edit → Health probes → Protocol: **HTTPS** → **Update**
 
 ---
 
 ### Task 3 — Test Front Door ⚠️ Manual
 
-Navigate to Front Door hostname → stop one web app to test failover.
+> ⏱️ Front Door propagates in a few minutes after correct configuration.  
+> ⚠️ Make sure you are using the correct endpoint hostname — the one created by Quick Create, not any endpoint created via PowerShell.
 
-```powershell
-(Get-AzFrontDoor -ResourceGroupName $RG -Name $FD_NAME).FrontendEndpoints[0].Hostname
-```
+Get the endpoint hostname from the portal: Front Door resource → **Endpoints** → copy hostname.
+
+**Test failover:**
+1. Navigate to Front Door hostname in browser — confirm it loads
+2. Portal → **App Services** → stop `WebAppContoso-1` → refresh browser — should still work via second app
+3. Stop `WebAppContoso-2` → refresh browser — should now show an error
 
 ---
 
@@ -296,5 +303,5 @@ Navigate to Front Door hostname → stop one web app to test failover.
 | File | Purpose |
 |------|---------|
 | `backend.json` | Creates BackendVM1 + BackendVM2 with NICs on BackendSubnet |
-| `backend.parameters.json` | Parameters — VM names, NIC names, size, admin username |
-| `install-iis.ps1` | Installs IIS and sets VM hostname as default page — run manually after deployment |
+| `backend.parameters.json` | Parameters — VM names, NIC names, size, admin username. Same password for both VMs. |
+| `install-iis.ps1` | Installs IIS and sets VM hostname as default page — run manually via `Invoke-AzVMRunCommand` after deployment |
