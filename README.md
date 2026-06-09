@@ -13,7 +13,7 @@ Always run the **Variables** block first in each session.
 | [M02](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M02) | VPN Gateway & Virtual WAN |✅ Tested |
 | [M03](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M03) | ExpressRoute | ✅ Tested |
 | [M04](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M04) | Load Balancer & Traffic Manager | ✅ Tested |
-| [M05](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M05) | Application Gateway & Front Door | ⏸ On Hold |
+| [M05](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M05) | Application Gateway & Front Door | ✅ Tested |
 | [M06](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M06) | DDoS, Firewall & Firewall Manager | ⏸ On Hold |
 | [M07](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M07) | Service Endpoints & Private Endpoint | ⏸ On Hold |
 | [M08](https://github.com/hcoelho26-GH/az700-labs-ps/tree/main/AZ700-M08) | Monitor Load Balancer | ⏸ On Hold |
